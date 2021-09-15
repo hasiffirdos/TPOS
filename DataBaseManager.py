@@ -29,13 +29,14 @@ def createDataBase():
                   'Sale_earn INTEGER,'
                   'Discount INTEGER,'
                   'Lended_amount INTEGER,'
-                  'borrower_Id text,'
-                  'Lend_date Date)')
+                  'customer_phone_number text,'
+                  'customer_name text)')
 
         conn.execute('CREATE TABLE IF NOT EXISTS Sales '
                   '(Sale_Id INTEGER PRIMARY KEY AUTOINCREMENT,'
                   'Billid INTEGER,'
                   'Itemid INTEGER,'
+                  'ItemName text,'
                   'Item_quantitty INTEGER,'
                   'Item_total INTEGER,'
                   'Item_profit INTEGER,'
@@ -46,9 +47,16 @@ def createDataBase():
                      # '  FOREIGN KEY(Billid) REFERENCES Bills(Bill_Id)'
                      ')')
         conn.execute('CREATE TABLE IF NOT EXISTS Admin (UserName INTEGER ,Password text) ')
-        conn.execute('CREATE TABLE IF NOT EXISTS Customers (C_Name text ,Due_Amount INTEGER,PhoneNumber text, Address text)')
+        conn.execute('CREATE TABLE IF NOT EXISTS Customers (C_Name text ,Due_Amount INTEGER,PhoneNumber text NOT NULL UNIQUE , Address text)')
         conn.execute('CREATE TABLE IF NOT EXISTS Dealers (D_Name text ,Due_Amount INTEGER,Spend_Amount INTEGER,PhoneNumber text, Address text)')
+        conn.execute('CREATE TABLE IF NOT EXISTS Ledger (customerName text, receivingDate date, ReceivedAmount INTEGER, Due_Amount INTEGER,Note text)')
         conn.execute("INSERT INTO Bills(Bill_Id,today_date,Profit,Sale_earn) VALUES (0,'date',0,0)")
+
+        # conn.execute('CREATE TABLE IF NOT EXISTS BillList (BillNumber INTEGER,'
+        #              'Name text, '
+        #              'Quantity INTEGER, '
+        #              'Price INTEGER, '
+        #              'Total INTEGER ) ')
         conn.commit()
 
 
@@ -175,8 +183,8 @@ def main():
         # AddData()
         createDataBase()
         # print_stocks()
-        print_bills()
-        print_sales()
+        # print_bills()
+        # print_sales()
         #  conn.commit()
 
 

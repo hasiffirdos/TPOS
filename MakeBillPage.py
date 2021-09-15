@@ -17,7 +17,6 @@ except ImportError:
     import tkinter as tk
     from tkinter import messagebox
 
-
 try:
     import ttk
 
@@ -38,7 +37,7 @@ def vp_start_gui():
     global val, w, root
     root = tk.Tk()
     # MakeBillPage_support.set_Tk_var()
-    top = Toplevel1(root)
+    top = MakeBillPage(root)
     # MakeBillPage_support.init(root, top)
     # root.protocol("WM_DELETE_WINDOW", _destroy)
     # root.bind("<Destroy>", _destroy)
@@ -46,6 +45,7 @@ def vp_start_gui():
 
 
 w = None
+line_count = 0
 
 
 def create_Toplevel1(root, *args, **kwargs):
@@ -54,7 +54,7 @@ def create_Toplevel1(root, *args, **kwargs):
     rt = root
     w = tk.Toplevel(root)
     # MakeBillPage_support.set_Tk_var()
-    top = Toplevel1(w)
+    top = MakeBillPage(w)
     # MakeBillPage_support.init(w, top, *args, **kwargs)
     return (w, top)
 
@@ -65,7 +65,7 @@ def destroy_Toplevel1():
     w = None
 
 
-class Toplevel1:
+class MakeBillPage:
     BillList = []
     cursor = "nul"
     bill_profit = 0
@@ -73,7 +73,6 @@ class Toplevel1:
     num_of_item = 0
     global conn, c
     printer = None
-
 
     def onTypingItemName(self, event=None):
         cursor = "nul"
@@ -101,25 +100,24 @@ class Toplevel1:
     def AddToBillList(self, item):
         self.BillList.append(item)
 
-    def updateTotal(self,event = None):
+    def updateTotal(self, event=None):
         total = 0
         for row in self.Scrolledtreeview1.get_children():
-            item = self.Scrolledtreeview1.item(row,"values")
-            total+= int(item[3])
+            item = self.Scrolledtreeview1.item(row, "values")
+            total += int(item[3])
 
         discount = self.DiscountEntry.get()
-        if discount!= '':
+        if discount != '':
             discount = int(discount)
-            total-=discount
+            total -= discount
         self.TotalLabel.configure(text=total)
 
         self.flush_fields()
 
-
     def fetch_item(self, event=None):
-        list= self.NameListBox.curselection()
+        list = self.NameListBox.curselection()
         name = self.NameListBox.get(list[0])
-        self.cursor =list[0]
+        self.cursor = list[0]
         self.c.execute('SELECT * From Stocks WHERE Name = "%s"' % name)
         row = self.c.fetchall()
         id = row[0][0]
@@ -131,19 +129,17 @@ class Toplevel1:
         self.PriceEntry.insert(0, price)
 
     def flush_fields(self):
-        self.QuantityEntry.delete(0,'end')
-        self.ProductCodeEntry.delete(0,'end')
-        self.PriceEntry.delete(0,'end')
-        self.SearchNameEntry.delete(0,'end')
-        self.CutEntry.delete(0,'end')
-        self.BorrowedQuantityEntry.delete(0,'end')
+        self.QuantityEntry.delete(0, 'end')
+        self.ProductCodeEntry.delete(0, 'end')
+        self.PriceEntry.delete(0, 'end')
+        self.SearchNameEntry.delete(0, 'end')
+        self.CutEntry.delete(0, 'end')
+        self.BorrowedQuantityEntry.delete(0, 'end')
         # self.isBorrowed.configure(value = 0)
         self.cursor = 0
         nlb = self.NameListBox.size()
         for i in range(nlb):
-            self.NameListBox.delete(0,'end')
-
-
+            self.NameListBox.delete(0, 'end')
 
     def AddToSales(self, event=None):
         # list = self.NameListBox.curselection()
@@ -162,98 +158,120 @@ class Toplevel1:
             price = int(price)
         else:
             return
-        if price <= 0 or qty<= 0:
+        if price <= 0 or qty <= 0:
             messagebox.showwarning("Invalid", "Please Fill All the fields")
             return
 
         borrowed_qty = self.BorrowedQuantityEntry.get()
-        if borrowed_qty!= '':
+        if borrowed_qty != '':
             borrowed_qty = int(borrowed_qty)
         else:
             borrowed_qty = 0
-        r_qty = qty -  borrowed_qty
-        if Available_quantity <  r_qty:
+        r_qty = qty - borrowed_qty
+        if Available_quantity < r_qty:
             messagebox.showerror("Out Of Stock", f"only {Available_quantity} items available")
             return
 
-
-        profit = (price-buying_price)*r_qty
+        profit = (price - buying_price) * r_qty
         cut = self.CutEntry.get()
-        if cut!='':
+        if cut != '':
             cut = int(cut)
         else:
             cut = 0
-        bkm_cut = borrowed_qty*cut
-        self.bill_profit +=profit
-        self.bill_profit +=bkm_cut
+        bkm_cut = borrowed_qty * cut
+        self.bill_profit += profit
+        self.bill_profit += bkm_cut
 
+        self.c.execute(
+            'INSERT INTO Sales(Billid,Itemid,ItemName, Item_quantitty,Item_total,Item_profit,Item_price)VALUES (?,?,?,?,?,?,?)',
+            (self.billNumber, id, selected_name, r_qty, price * r_qty, profit, price))
 
-        self.c.execute('INSERT INTO Sales(Billid,Itemid,Item_quantitty,Item_total,Item_profit,Item_price)VALUES (?,?,?,?,?,?)',
-                       (self.billNumber, id, r_qty, price * r_qty,profit,price))
-
-        self.c.execute(f'Update Stocks SET Profit =Profit + {profit}, Quantity = Quantity - {r_qty} WHERE Name = "{selected_name}"')
+        self.c.execute(
+            f'Update Stocks SET Profit =Profit + {profit}, Quantity = Quantity - {r_qty} WHERE Name = "{selected_name}"')
         # self.ProductCodeEntry.insert(0, id)
         self.AddToList()
 
-    def addcustomer(self,cursor = None):
-        phone_num = self.CustomerPhone.get()
+    def addcustomer(self, cursor=None):
+        customer_phone_num = self.CustomerPhone.get()
+        customer_name = self.customerName.get()
+        total = int(self.TotalLabel.cget("text"))
+        received = int(self.ReceivedEntry.get())
+        balance = total - received
         root = tk.Tk()
-        customer.Toplevel1(root,Phone=phone_num,cursor= cursor)
+        customer.Toplevel1(root, Phone=customer_phone_num, Name=customer_name, cursor=cursor, balance=balance)
         root.mainloop()
 
     def commitDB(self):
         date = datetime.datetime.now()
-        date=date.strftime("%Y-%m-%d")
+        date = date.strftime("%Y-%m-%d")
         # date=str(date.strftime("%Y-%m-%d %H:%M"))
         total = int(self.TotalLabel.cget("text"))
         profit = 0
         discount = self.DiscountEntry.get()
-        if discount!= '':
+        if discount != '':
             discount = int(discount)
         else:
             discount = 0
         profit = self.bill_profit - discount
-        rec = self.ReceivedEntry.get()
-        if rec != '':
-            rec = int(rec)
-            lend = total - rec
-            c_phn = self.CustomerPhone.get()
-            if c_phn == '':
-                messagebox.showerror("Invalid", "please Enter The Customer Phone Number")
-                return
-            self.c.execute(f'SELECT * FROM Customers WHERE PhoneNumber = "{c_phn}"')
+        receivedAmount = self.ReceivedEntry.get()
+        customer_name = self.customerName.get().lower()
+        customer_phone_number = self.CustomerPhone.get()
+        if customer_name == '':
+            messagebox.showerror("Invalid", "please Enter The Customer Name")
+            return
+        # if customer_phone_number == '':
+        #     messagebox.showerror("Invalid", "please Enter The Customer Phone Number")
+        #     return
+        if int(receivedAmount) > total:
+            messagebox.showerror("error", "please Add previous receiving to customer ledger...!")
+            return
+        if receivedAmount != '':
+            receivedAmount = int(receivedAmount)
+            lend = total - receivedAmount
+            self.c.execute(
+                f'SELECT C_Name,Due_Amount,PhoneNumber,Address FROM Customers WHERE C_Name = "{customer_name}"')
             rows = self.c.fetchall()
             found = False
-            for row in rows:
+
+            if rows.__len__() > 0:
                 found = True
+                if rows.__len__() > 1:
+                    messagebox.showerror("Warning", "Multiple Customers with same name added")
+                    return
+
             if not found:
                 self.addcustomer(self.c)
                 # print("not found")
                 return
-            self.c.execute(f'INSERT INTO Bills(Bill_Id,today_date,Profit,Sale_earn,Discount,Lended_amount,borrower_Id,Lend_date)'
-                           f'VALUES ({self.billNumber},"{date}",{profit},{total},{discount},{lend},"{c_phn}","{date}")')
+            self.c.execute(
+                f'INSERT INTO Bills(Bill_Id,today_date,Profit,Sale_earn,Discount,Lended_amount,customer_phone_number,customer_name)'
+                f'VALUES ({self.billNumber},"{date}",{profit},{total},{discount},{lend},"{customer_phone_number}","{customer_name}")')
+            row = rows[0]
+            self.c.execute(f'UPDATE Customers SET Due_Amount = Due_Amount + {lend} WHERE C_Name = "{customer_name}"')
+            self.c.execute(f'INSERT INTO Ledger (customerName,receivingDate,ReceivedAmount,Due_Amount,Note)'
+                           f'VALUES ("{row[0]}","{date}",0,{row[1] + total},"Bill created of {total} rupees")')
+            if receivedAmount > 0:
+                self.c.execute(f'INSERT INTO Ledger (customerName,receivingDate,ReceivedAmount,Due_Amount,Note)'
+                               f'VALUES ("{row[0]}","{date}",{receivedAmount},{row[1] + lend},"{receivedAmount} rupees received...")')
 
-            self.c.execute(f'UPDATE Customers SET Due_Amount = Due_Amount + {lend} WHERE PhoneNumber = "{c_phn}"')
+            self.conn.commit()
+            messagebox.showinfo("Doing", "Printing Bill")
+            # self.printBillNow()
+            self.flush_fields()
+            for i in self.Scrolledtreeview1.get_children():
+                self.Scrolledtreeview1.delete(i)
+            self.TotalLabel.configure(text=0)
+            self.bill_profit = 0
+            self.DiscountEntry.delete(0, 'end')
+            self.CustomerPhone.delete(0, 'end')
+            self.ReceivedEntry.delete(0, 'end')
+            self.customerBorrowed = 0
+            self.customerName.delete(0, 'end')
+            self.billNumber += 1
+            self.BillNumberTAG.configure(text=self.billNumber)
+
         else:
-            self.c.execute(f'INSERT INTO Bills(Bill_Id,today_date,Profit,Sale_earn,Discount,Lended_amount,borrower_Id,Lend_date)'
-                           f'VALUES ({self.billNumber},"{date}",{profit},{total},{discount},0,"0","0")')
-        self.conn.commit()
-        messagebox.showinfo("Doing","Printing Bill")
-        self.printBillNow()
-        self.flush_fields()
-        for i in self.Scrolledtreeview1.get_children():
-            self.Scrolledtreeview1.delete(i)
-        self.TotalLabel.configure(text = 0)
-        self.bill_profit = 0
-        self.DiscountEntry.delete(0,'end')
-        self.CustomerPhone.delete(0,'end')
-        self.ReceivedEntry.delete(0,'end')
-        self.customerBorrowed = 0
-        self.billNumber += 1
-        self.BillNumber.configure(text=self.billNumber)
-
-        # self.printer.text("Hello World")
-        # self.printer.lf()
+            messagebox.showerror("Error", "Please Enter Received Amount")
 
     def AddToList(self):
         # list = self.NameListBox.curselection()
@@ -261,9 +279,10 @@ class Toplevel1:
         quantity = int(self.QuantityEntry.get())
         price = int(self.PriceEntry.get())
         total = quantity * price
+        tag_list = ['odd', 'even']
 
         self.Scrolledtreeview1.insert('', 'end', text=self.num_of_item,
-                                      values=(pName, quantity, price, total))
+                                      values=(pName, quantity, price, total), tags=(tag_list[self.num_of_item % 2],))
         # Increment counter
         self.tree_iterator = self.tree_iterator + 1
         self.num_of_item += 1
@@ -283,29 +302,28 @@ class Toplevel1:
             self.Scrolledtreeview1.delete(curItem)
             self.c.execute(f"SELECT Item_Id from Stocks WHERE Name = '{item[0]}'")
             rows = self.c.fetchall()
-            id =0
+            id = 0
             for row in rows:
                 id = row[0]
                 break
             self.c.execute(f"Delete from Sales WHERE Itemid = {id} and Billid = {self.billNumber}")
             self.updateTotal()
 
-
-    def EnterCode(self,event = None):
+    def EnterCode(self, event=None):
         self.ProductCodeEntry.focus()
 
-    def RecordLendings(self,event = None):
+    def RecordLendings(self, event=None):
         rec = self.ReceivedEntry.get()
         if rec != '':
             rec = int(rec)
         else:
-            messagebox.showerror("Invalid","please Enter The received amount")
+            messagebox.showerror("Invalid", "please Enter The received amount")
             return
         c_phn = self.CustomerPhone.get()
         if c_phn != '':
             c_phn = int(c_phn)
         else:
-            messagebox.showerror("Invalid","please Enter The received amount")
+            messagebox.showerror("Invalid", "please Enter The received amount")
             return
         self.c.execute(f'SELECT * FROM Customers WHERE PhoneNumber = {c_phn}')
         rows = self.c.fetchall()
@@ -314,14 +332,14 @@ class Toplevel1:
             found = True
         if found == False:
             # OpenCustomerViewer()
-            a= 0
+            a = 0
         else:
             total = int(self.TotalLabel.cget("text"))
             lend = total - rec
             print(lend)
             self.c.execute(f'UPDATE Customers SET Due_Amount = Due_Amount + {lend} WHERE PhoneNumber = {c_phn}')
 
-    def GetRecByCode(self,event = None):
+    def GetRecByCode(self, event=None):
 
         id = self.ProductCodeEntry.get()
         self.c.execute(f'SELECT * From Stocks WHERE Item_Id = {id}')
@@ -346,13 +364,13 @@ class Toplevel1:
         _compcolor = '#d9d9d9'  # X11 color: 'gray85'
         _ana1color = '#d9d9d9'  # X11 color: 'gray85'
         _ana2color = '#ececec'  # Closest X11 color: 'gray92'
-        font10 = "-family {DejaVu Sans} -size 30 -weight normal -slant" \
+        font10 = "-family {fixed} -size 30 -weight normal -slant" \
                  " roman -underline 0 -overstrike 0"
         font12 = "-family {DejaVu Sans} -size 15 -weight normal -slant" \
                  " roman -underline 0 -overstrike 0"
         font13 = "-family {DejaVu Sans Mono} -size 20 -weight normal " \
                  "-slant roman -underline 0 -overstrike 0"
-        font9 = "-family {DejaVu Sans} -size 24 -weight bold -slant " \
+        font9 = "-family {times new roman} -size 24 -weight bold -slant " \
                 "roman -underline 0 -overstrike 0"
         self.style = ttk.Style()
         if sys.platform == "win32":
@@ -397,15 +415,17 @@ class Toplevel1:
         # self.Scrolledlistbox1.configure(width=10)
         # self.Scrolledlistbox1.bind('<Delete>', self.DeleteItemfromList)
 
-
-        self.style.configure('mystyle.Treeview.Heading', font=('Calibri', 12))
+        self.style.configure('mystyle.Treeview.Heading', font=('Calibri', 14, "bold"))
         self.style.configure("mystyle.Treeview", highlightthickness=0, bd=0,
-                             font=('Calibri', 12))  # Modify the font of the bodySellin
-        self.Scrolledtreeview1 = ScrolledTreeView(top, style="mystyle.Treeview", columns=('Name', 'Quantity','price','Total'))
+                             font=('Calibri', 15), rowheight=40)  # Modify the font of the bodySellin
+        self.Scrolledtreeview1 = ScrolledTreeView(top, style="mystyle.Treeview",
+                                                  columns=('Name', 'Quantity', 'price', 'Total'))
         self.Scrolledtreeview1.place(relx=0.015, rely=0.385, relheight=0.435
-                                    , relwidth=0.968)
-        self.Scrolledtreeview1.bind("<Delete>",self.DeleteItemfromList)
+                                     , relwidth=0.968)
+        self.Scrolledtreeview1.bind("<Delete>", self.DeleteItemfromList)
         # self.Scrolledtreeview1.bind("<ButtonRelease-1>",self.DeleteItemfromList)
+        # self.Scrolledtreeview1.tag_configure('odd', background='white')
+        # self.Scrolledtreeview1.tag_configure('even', background='lightblue')
         self.Scrolledtreeview1.tag_configure('odd', background='#E8E8E8')
         self.Scrolledtreeview1.tag_configure('even', background='#DFDFDF')
         # self.tree = ttk.Treeview(self.parent, columns=('Dose', 'Modification date'))
@@ -414,13 +434,12 @@ class Toplevel1:
         self.Scrolledtreeview1.heading('#2', text='Quantity')
         self.Scrolledtreeview1.heading('#3', text='price')
         self.Scrolledtreeview1.heading('#4', text='Total')
-        self.Scrolledtreeview1.column('#0',width = 50)  # , stretch=tk.YES
-        self.Scrolledtreeview1.column('#1',width = 400)  # , stretch=tk.YES
-        self.Scrolledtreeview1.column('#2',width = 100)  # , stretch=tk.YES
-        self.Scrolledtreeview1.column('#3',width = 100)  # , stretch=tk.YES
-        self.Scrolledtreeview1.column('#4',width = 100)  # , stretch=tk.YES
+        self.Scrolledtreeview1.column('#0', width=50)  # , stretch=tk.YES
+        self.Scrolledtreeview1.column('#1', width=400)  # , stretch=tk.YES
+        self.Scrolledtreeview1.column('#2', width=100)  # , stretch=tk.YES
+        self.Scrolledtreeview1.column('#3', width=100)  # , stretch=tk.YES
+        self.Scrolledtreeview1.column('#4', width=100)  # , stretch=tk.YES
         self.tree_iterator = 0
-
 
         self.Label2 = tk.Label(top)
         self.Label2.place(relx=0.015, rely=0.113, height=28, width=169)
@@ -452,17 +471,17 @@ class Toplevel1:
         self.Label5.configure(text='''Bill Number:''')
         self.Label5.configure(width=135)
 
-        self.BillNumber = tk.Label(top)
-        self.BillNumber.place(relx=0.874, rely=0.053, height=31, width=115)
-        self.BillNumber.configure(activebackground="#f9f9f9")
-        self.BillNumber.configure(anchor='w')
-        self.BillNumber.configure(font=font12)
-        self.BillNumber.configure(width=115)
+        self.BillNumberTAG = tk.Label(top)
+        self.BillNumberTAG.place(relx=0.874, rely=0.053, height=31, width=115)
+        self.BillNumberTAG.configure(activebackground="#f9f9f9")
+        self.BillNumberTAG.configure(anchor='w')
+        self.BillNumberTAG.configure(font=font12)
+        self.BillNumberTAG.configure(width=115)
         self.c.execute('SELECT Max(Bill_Id) from Bills ')
         bill = self.c.fetchall()
         self.billNumber = bill[0][0]
         self.billNumber += 1
-        self.BillNumber.configure(text=self.billNumber)
+        self.BillNumberTAG.configure(text=self.billNumber)
 
         self.Label3 = tk.Label(top)
         self.Label3.place(relx=0.039, rely=0.212, height=48, width=118)
@@ -482,7 +501,6 @@ class Toplevel1:
         # self.Label7.configure(font=font12)
         # self.Label7.configure(text='''Discount:''')
 
-
         # relx = 0.651, rely = 0.206, height = 43
         # , relwidth = 0.128
         # discount place
@@ -493,13 +511,6 @@ class Toplevel1:
         self.Label7_6.configure(font=font12)
         self.Label7_6.configure(text='''Received:''')
         self.Label7_6.configure(width=109)
-
-        self.Label7_ = tk.Label(top)
-        self.Label7_.place(relx=0.435, rely=0.910, height=51, width=109)
-        self.Label7_.configure(activebackground="#f9f9f9")
-        self.Label7_.configure(font=font12)
-        self.Label7_.configure(text='''Customer\nphone#:''')
-        self.Label7_.configure(width=109)
 
         self.SearchNameEntry = tk.Entry(top)
         self.SearchNameEntry.place(relx=0.139, rely=0.106, height=43, relwidth=0.074)
@@ -540,7 +551,7 @@ class Toplevel1:
         # function() lambda event:
 
         self.isBorrowed = tk.Label(top)
-        self.isBorrowed.place(relx=0.501, rely=0.206, relheight=0.057, relwidth=0.183)
+        # self.isBorrowed.place(relx=0.501, rely=0.206, relheight=0.057, relwidth=0.183)
         self.isBorrowed.configure(activebackground="#f9f9f9")
         self.isBorrowed.configure(font=font12)
         self.isBorrowed.configure(justify='left')
@@ -548,14 +559,14 @@ class Toplevel1:
         self.isBorrowed.configure(width=237)
 
         self.BorrowedQuantityEntry = tk.Entry(top)
-        self.BorrowedQuantityEntry.place(relx=0.69, rely=0.206, height=43, relwidth=0.089)
+        # self.BorrowedQuantityEntry.place(relx=0.69, rely=0.206, height=43, relwidth=0.089)
         self.BorrowedQuantityEntry.configure(background="white")
         self.BorrowedQuantityEntry.configure(font=font13)
         self.BorrowedQuantityEntry.configure(selectbackground="#c4c4c4")
         self.BorrowedQuantityEntry.configure(width=116)
 
         self.CutEntry = tk.Entry(top)
-        self.CutEntry.place(relx=0.847, rely=0.206, height=43, relwidth=0.051)
+        # self.CutEntry.place(relx=0.847, rely=0.206, height=43, relwidth=0.051)
         self.CutEntry.configure(background="white")
         self.CutEntry.configure(font=font13)
         self.CutEntry.configure(selectbackground="#c4c4c4")
@@ -563,47 +574,50 @@ class Toplevel1:
         self.CutEntry.bind('<Return>', self.AddToSales)
 
         self.Label7 = tk.Label(top)
-        self.Label7.place(relx=0.054, rely=0.875, height=51, width=109)
+        self.Label7.place(relx=0.009, rely=0.850, height=51, width=109)
         self.Label7.configure(activebackground="#f9f9f9")
         self.Label7.configure(font=font12)
         self.Label7.configure(text='''Discount:''')
 
         self.DiscountEntry = tk.Entry(top)
-        self.DiscountEntry.place(relx=0.146, rely=0.875, height=43, relwidth=0.136)
+        self.DiscountEntry.place(relx=0.100, rely=0.850, height=43, relwidth=0.136)
         self.DiscountEntry.configure(background="white")
         self.DiscountEntry.configure(font=font13)
         self.DiscountEntry.configure(selectbackground="#c4c4c4")
-        self.DiscountEntry.bind('<FocusOut>',self.updateTotal)
+        self.DiscountEntry.bind('<FocusOut>', self.updateTotal)
         # relx = 0.054, rely = 0.889, relheight = 0.057
         # , relwidth = 0.144
-        #cb bnc
+        # cb bnc
 
         self.Label10_1 = tk.Label(top)
-        self.Label10_1.place(relx=0.79, rely=0.206, height=41, width=69)
+        # self.Label10_1.place(relx=0.79, rely=0.206, height=41, width=69)
         self.Label10_1.configure(activebackground="#f9f9f9")
         self.Label10_1.configure(font=font12)
         self.Label10_1.configure(text='''Cut:''')
         self.Label10_1.configure(width=69)
 
-
         self.isCustomerBorrowing = tk.Checkbutton(top)
-        self.isCustomerBorrowing.place(relx=0.3, rely=0.875, relheight=0.057, relwidth = 0.133)
+        self.isCustomerBorrowing.place(relx=0.103, rely=0.905, relheight=0.057, relwidth=0.133)
         self.isCustomerBorrowing.configure(activebackground="#f9f9f9")
         self.isCustomerBorrowing.configure(font=font12)
-        self.isCustomerBorrowing.configure(justify='left')
+        self.isCustomerBorrowing.configure(justify='right')
         self.isCustomerBorrowing.configure(text='''Borrowing''')
         self.customerBorrowed = tk.IntVar()
-        self.isCustomerBorrowing.configure(width=147, variable = self.customerBorrowed)
-
-
-
+        self.isCustomerBorrowing.configure(width=147, variable=self.customerBorrowed)
 
         self.ReceivedEntry = tk.Entry(top)
-        self.ReceivedEntry.place(relx=0.532, rely=0.840, height=43, relwidth = 0.097)
+        self.ReceivedEntry.place(relx=0.532, rely=0.840, height=43, relwidth=0.097)
         self.ReceivedEntry.configure(background="white")
         self.ReceivedEntry.configure(font=font13)
         self.ReceivedEntry.configure(selectbackground="#c4c4c4")
         self.ReceivedEntry.configure(width=126)
+
+        self.Label7_ = tk.Label(top)
+        self.Label7_.place(relx=0.435, rely=0.910, height=51, width=109)
+        self.Label7_.configure(activebackground="#f9f9f9")
+        self.Label7_.configure(font=font12)
+        self.Label7_.configure(text='''Customer\nphone#:''')
+        self.Label7_.configure(width=109)
 
         self.CustomerPhone = tk.Entry(top)
         self.CustomerPhone.place(relx=0.532, rely=0.910, height=43, relwidth=0.097)
@@ -611,6 +625,21 @@ class Toplevel1:
         self.CustomerPhone.configure(font=font12)
         self.CustomerPhone.configure(selectbackground="#c4c4c4")
         self.CustomerPhone.configure(width=126)
+        # self.CustomerPhone.configure(command = self.RecordLendings)
+
+        self.customerNameLabel_ = tk.Label(top)
+        self.customerNameLabel_.place(relx=0.25, rely=0.880, height=51, width=109)
+        self.customerNameLabel_.configure(activebackground="#f9f9f9")
+        self.customerNameLabel_.configure(font=font12)
+        self.customerNameLabel_.configure(text='''Customer\nName:''')
+        self.customerNameLabel_.configure(width=109)
+
+        self.customerName = tk.Entry(top)
+        self.customerName.place(relx=0.33, rely=0.880, height=43, relwidth=0.097)
+        self.customerName.configure(background="white")
+        self.customerName.configure(font=font12)
+        self.customerName.configure(selectbackground="#c4c4c4")
+        self.customerName.configure(width=126)
         # self.CustomerPhone.configure(command = self.RecordLendings)
 
         self.TotalLabel_9 = tk.Label(top)
@@ -646,8 +675,6 @@ class Toplevel1:
         self.Label10.configure(text='''Product Code:''')
         self.Label10.configure(width=159)
 
-
-
     def __del__(self):
         Main.LaunchWindow()
         self.c.close()
@@ -665,6 +692,7 @@ class Toplevel1:
             with open("Bill.txt", "at") as f1:
                 for line in f:
                     f1.write(line)
+
 
 # The following code is added to facilitate the Scrolled widgets you specified.
 class AutoScroll(object):
@@ -744,12 +772,16 @@ def _create_container(func):
 class ScrolledTreeView(AutoScroll, ttk.Treeview):
     '''A standard ttk Treeview widget with scrollbars that will
     automatically show/hide as needed.'''
+
     @_create_container
     def __init__(self, master, **kw):
         ttk.Treeview.__init__(self, master, **kw)
         AutoScroll.__init__(self, master)
 
+
 import platform
+
+
 def _bound_to_mousewheel(event, widget):
     child = widget.winfo_children()[0]
     if platform.system() == 'Windows' or platform.system() == 'Darwin':
@@ -761,6 +793,7 @@ def _bound_to_mousewheel(event, widget):
         child.bind_all('<Shift-Button-4>', lambda e: _on_shiftmouse(e, child))
         child.bind_all('<Shift-Button-5>', lambda e: _on_shiftmouse(e, child))
 
+
 def _unbound_to_mousewheel(event, widget):
     if platform.system() == 'Windows' or platform.system() == 'Darwin':
         widget.unbind_all('<MouseWheel>')
@@ -771,22 +804,24 @@ def _unbound_to_mousewheel(event, widget):
         widget.unbind_all('<Shift-Button-4>')
         widget.unbind_all('<Shift-Button-5>')
 
+
 def _on_mousewheel(event, widget):
     if platform.system() == 'Windows':
-        widget.yview_scroll(-1*int(event.delta/120),'units')
+        widget.yview_scroll(-1 * int(event.delta / 120), 'units')
     elif platform.system() == 'Darwin':
-        widget.yview_scroll(-1*int(event.delta),'units')
+        widget.yview_scroll(-1 * int(event.delta), 'units')
     else:
         if event.num == 4:
             widget.yview_scroll(-1, 'units')
         elif event.num == 5:
             widget.yview_scroll(1, 'units')
 
+
 def _on_shiftmouse(event, widget):
     if platform.system() == 'Windows':
-        widget.xview_scroll(-1*int(event.delta/120), 'units')
+        widget.xview_scroll(-1 * int(event.delta / 120), 'units')
     elif platform.system() == 'Darwin':
-        widget.xview_scroll(-1*int(event.delta), 'units')
+        widget.xview_scroll(-1 * int(event.delta), 'units')
     else:
         if event.num == 4:
             widget.xview_scroll(-1, 'units')
@@ -800,4 +835,3 @@ if __name__ == '__main__':
 
 def launchWindow():
     vp_start_gui()
-

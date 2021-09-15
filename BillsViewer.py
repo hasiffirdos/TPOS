@@ -60,14 +60,16 @@ class Toplevel1:
         _ana2color = '#ececec' # Closest X11 color: 'gray92' 
         font10 = "-family {DejaVu Sans} -size 30 -weight normal -slant"  \
             " roman -underline 0 -overstrike 0"
-        font9 = "-family {DejaVu Sans Mono} -size 15 -weight normal "  \
+        font9 = "-family {Arial} -size 18 -weight normal "  \
             "-slant roman -underline 0 -overstrike 0"
+        customized_font = "-family {Calibri} -size 15 -weight normal -slant " \
+                          "roman -underline 0 -overstrike 0"
         self.style = ttk.Style()
         if sys.platform == "win32":
             self.style.theme_use('winnative')
         self.style.configure('.',background=_bgcolor)
         self.style.configure('.',foreground=_fgcolor)
-        self.style.configure('.',font="TkDefaultFont")
+        self.style.configure('.',font=customized_font)
         self.style.map('.',background=
             [('selected', _compcolor), ('active',_ana2color)])
 
@@ -82,7 +84,7 @@ class Toplevel1:
         self.Label1.configure(text='''Bills Viewer''')
 
         self.Frame1 = tk.Frame(top)
-        self.Frame1.place(relx=0.025, rely=0.11, relheight=0.276, relwidth=0.375)
+        self.Frame1.place(relx=0.025, rely=0.11, relheight=0.280, relwidth=0.375)
 
         self.Frame1.configure(relief='groove')
         self.Frame1.configure(borderwidth="2")
@@ -91,7 +93,7 @@ class Toplevel1:
 
         self.i = tk.IntVar()
         self.DateRB = tk.Radiobutton(self.Frame1)
-        self.DateRB.place(relx=0.697, rely=0.022, relheight=0.102
+        self.DateRB.place(relx=0.05, rely=0.45, relheight=0.102
                 , relwidth=0.231)
         self.DateRB.configure(activebackground="#f9f9f9")
         self.DateRB.configure(indicatoron="0")
@@ -100,8 +102,8 @@ class Toplevel1:
         self.DateRB.configure(value=1,variable = self.i)
 
         self.MonthRB = tk.Radiobutton(self.Frame1)
-        self.MonthRB.place(relx=0.697, rely=0.422, relheight=0.102
-                , relwidth=0.22)
+        self.MonthRB.place(relx=0.05, rely=0.55, relheight=0.102
+                , relwidth=0.231)
         self.MonthRB.configure(activebackground="#f9f9f9")
         self.MonthRB.configure(indicatoron="0")
         self.MonthRB.configure(justify='left')
@@ -109,88 +111,98 @@ class Toplevel1:
         self.MonthRB.configure(value=2,variable = self.i)
 
         self.yearRB = tk.Radiobutton(self.Frame1)
-        self.yearRB.place(relx=0.697, rely=0.289, relheight=0.102
-                , relwidth=0.198)
+        self.yearRB.place(relx=0.05, rely=0.65, relheight=0.102
+                , relwidth=0.231)
         self.yearRB.configure(activebackground="#f9f9f9")
         self.yearRB.configure(indicatoron="0")
         self.yearRB.configure(justify='left')
         self.yearRB.configure(text='''By Year''')
         self.yearRB.configure(value=3,variable = self.i)
 
-        self.WeekRB = tk.Radiobutton(self.Frame1)
-        self.WeekRB.place(relx=0.697, rely=0.156, relheight=0.102, relwidth=0.22)
+        # self.WeekRB = tk.Radiobutton(self.Frame1)
+        # self.WeekRB.place(relx=0.697, rely=0.156, relheight=0.102, relwidth=0.22)
+        #
+        # self.WeekRB.configure(activebackground="#f9f9f9")
+        # self.WeekRB.configure(indicatoron="0")
+        # self.WeekRB.configure(justify='left')
+        # self.WeekRB.configure(text='''By Week''')
+        # self.WeekRB.configure(value=4,variable = self.i)
 
-        self.WeekRB.configure(activebackground="#f9f9f9")
-        self.WeekRB.configure(indicatoron="0")
-        self.WeekRB.configure(justify='left')
-        self.WeekRB.configure(text='''By Week''')
-        self.WeekRB.configure(value=4,variable = self.i)
-
-        self.TodayRB = tk.Radiobutton(self.Frame1)
-        self.TodayRB.place(relx=0.697, rely=0.578, relheight=0.102
-                , relwidth=0.204)
-        self.TodayRB.configure(activebackground="#f9f9f9")
-        self.TodayRB.configure(indicatoron="0")
-        self.TodayRB.configure(justify='left')
-        self.TodayRB.configure(text='''Today''')
-        self.TodayRB.configure(value=5,variable = self.i)
+        # self.TodayRB = tk.Radiobutton(self.Frame1)
+        # self.TodayRB.place(relx=0.697, rely=0.578, relheight=0.102
+        #         , relwidth=0.204)
+        # self.TodayRB.configure(activebackground="#f9f9f9")
+        # self.TodayRB.configure(indicatoron="0")
+        # self.TodayRB.configure(justify='left')
+        # self.TodayRB.configure(text='''Today''')
+        # self.TodayRB.configure(value=5,variable = self.i)
 
         self.DateEntry = tk.Entry(self.Frame1)
-        self.DateEntry.place(relx=0.258, rely=0.044,height=33, relwidth=0.126)
+        self.DateEntry.place(relx=0.15, rely=0.044,relheight=0.125, relwidth=0.126)
         self.DateEntry.configure(background="white")
         self.DateEntry.configure(font=font9)
         self.DateEntry.configure(selectbackground="#c4c4c4")
 
 
         self.MonthEnrty = tk.Entry(self.Frame1)
-        self.MonthEnrty.place(relx=0.258, rely=0.267,height=33, relwidth=0.126)
+        self.MonthEnrty.place(relx=0.15, rely=0.17,relheight=0.125, relwidth=0.126)
         self.MonthEnrty.configure(background="white")
         self.MonthEnrty.configure(font=font9)
         self.MonthEnrty.configure(selectbackground="#c4c4c4")
 
         self.YearEntry = tk.Entry(self.Frame1)
-        self.YearEntry.place(relx=0.258, rely=0.489,height=33, relwidth=0.126)
+        self.YearEntry.place(relx=0.15, rely=0.30,relheight=0.125, relwidth=0.126)
         self.YearEntry.configure(background="white")
         self.YearEntry.configure(font=font9)
         self.YearEntry.configure(selectbackground="#c4c4c4")
 
-        self.Label2 = tk.Label(self.Frame1)
-        self.Label2.place(relx=0.09, rely=0.511, height=21, width=49)
-        self.Label2.configure(activebackground="#f9f9f9")
-        self.Label2.configure(text='''Year''')
-
         self.Label2_6 = tk.Label(self.Frame1)
-        self.Label2_6.place(relx=0.09, rely=0.089, height=21, width=39)
+        self.Label2_6.place(relx=0.02, rely=0.03, height=21, width=59)
         self.Label2_6.configure(activebackground="#f9f9f9")
         self.Label2_6.configure(text='''Date''')
 
         self.Label2_7 = tk.Label(self.Frame1)
-        self.Label2_7.place(relx=0.067, rely=0.289, height=21, width=59)
+        self.Label2_7.place(relx=0.02, rely=0.17, height=21, width=59)
         self.Label2_7.configure(activebackground="#f9f9f9")
         self.Label2_7.configure(text='''Month''')
 
-        self.WeekEntry = tk.Entry(self.Frame1)
-        self.WeekEntry.place(relx=0.528, rely=0.244,height=33, relwidth=0.126)
-        self.WeekEntry.configure(background="white")
-        self.WeekEntry.configure(font=font9)
-        self.WeekEntry.configure(selectbackground="#c4c4c4")
+        self.Label2 = tk.Label(self.Frame1)
+        self.Label2.place(relx=0.02, rely=0.30, height=21, width=59)
+        self.Label2.configure(activebackground="#f9f9f9")
+        self.Label2.configure(text='''Year''')
 
-        self.Label3 = tk.Label(self.Frame1)
-        self.Label3.place(relx=0.393, rely=0.289, height=21, width=56)
-        self.Label3.configure(activebackground="#f9f9f9")
-        self.Label3.configure(text='''Week #''')
-
-        self.TSeparator1 = ttk.Separator(self.Frame1)
-        self.TSeparator1.place(relx=0.034, rely=0.733, relwidth=0.921)
+        self.name_entry = tk.Entry(self.Frame1)
+        self.name_entry.place(relx=0.4, rely=0.03, relheight=0.15, relwidth=0.55)
+        self.name_entry.configure(background="white")
+        self.name_entry.configure(font=font9)
+        self.name_entry.configure(selectbackground="#c4c4c4")
 
         self.GetFilteredBillsButton = tk.Button(top)
-        self.GetFilteredBillsButton.place(relx=0.076, rely=0.325, height=41
+        self.GetFilteredBillsButton.place(relx=0.25, rely=0.17, height=41
+                , width=150)
+        self.GetFilteredBillsButton.configure(activebackground="#f9f9f9")
+        self.GetFilteredBillsButton.configure(text='''Get Named Bills''',font=("Calibri",12))
+        self.GetFilteredBillsButton.configure(command = self.get_by_name)
+
+
+        self.name_label = tk.Label(self.Frame1)
+        self.name_label.place(relx=0.3, rely=0.03, relheight=0.15, relwidth=0.1)
+        self.name_label.configure(activebackground="#f9f9f9")
+        self.name_label.configure(text='''Name''')
+
+        self.TSeparator1 = ttk.Separator(self.Frame1)
+        self.TSeparator1.place(relx=0.034, rely=0.770, relwidth=0.921)
+
+        self.GetFilteredBillsButton = tk.Button(top)
+        self.GetFilteredBillsButton.place(relx=0.076, rely=0.335, height=41
                 , width=131)
         self.GetFilteredBillsButton.configure(activebackground="#f9f9f9")
-        self.GetFilteredBillsButton.configure(text='''Get Bills''')
+        self.GetFilteredBillsButton.configure(text='''Get Bills''',font=("Calibri",12))
         self.GetFilteredBillsButton.configure(command = self.GetSummary)
 
-        self.style.configure('Treeview.Heading',  font="TkDefaultFont")
+        self.style.configure("mystyle.Treeview.Heading", font=('Calibri', 16))
+        self.style.configure("mystyle.Treeview", highlightthickness=0, bd=0,
+                             font=('Calibri', 15),rowheight=30)
         self.Scrolledtreeview1 = ScrolledTreeView(top, style="mystyle.Treeview", columns=('Name','Quantity', 'Price','Total'))
         self.Scrolledtreeview1.place(relx=0.025, rely=0.417, relheight=0.541
                 , relwidth=0.952)
@@ -212,17 +224,17 @@ class Toplevel1:
         self.tree_iterator = 0
 
         self.GetAllBillsButton = tk.Button(top)
-        self.GetAllBillsButton.place(relx=0.227, rely=0.325, height=41
+        self.GetAllBillsButton.place(relx=0.227, rely=0.335, height=41
                 , width=131)
         self.GetAllBillsButton.configure(activebackground="#f9f9f9")
-        self.GetAllBillsButton.configure(text='''Get All Bills''')
+        self.GetAllBillsButton.configure(text='''Get All Bills''',font=("Calibri",12))
         self.GetAllBillsButton.configure(command = self.GetAllBills)
 
-        self.style.configure('mystyle.Treeview.Heading', font=('Calibri', 12))
+        # self.style.configure('mystyle.Treeview.Heading', font=('Calibri', 1))
         self.style.configure("mystyle.Treeview", highlightthickness=0, bd=0,
                              font=('Calibri', 15))  # Modify the font of the body
 
-        self.AllBillsViewTreeView = ScrolledTreeView(top, style="mystyle.Treeview", columns=('date','Sale', 'Profit','Discount'))
+        self.AllBillsViewTreeView = ScrolledTreeView(top, style="mystyle.Treeview", columns=('customer_name','date','Sale', 'Profit','Discount'))
         self.AllBillsViewTreeView.place(relx=0.413, rely=0.11, relheight=0.271
                                         , relwidth=0.564)
 
@@ -230,15 +242,17 @@ class Toplevel1:
         self.AllBillsViewTreeView .tag_configure('even', background='#DFDFDF')
         # self.tree = ttk.Treeview(self.parent, columns=('Dose', 'Modification date'))
         self.AllBillsViewTreeView .heading('#0', text='Bill #')
-        self.AllBillsViewTreeView .heading('#1', text='Date')
-        self.AllBillsViewTreeView .heading('#2', text='Sale')
-        self.AllBillsViewTreeView .heading('#3', text='Profit')
-        self.AllBillsViewTreeView .heading('#4', text='Discount')
+        self.AllBillsViewTreeView .heading('#1', text='customer')
+        self.AllBillsViewTreeView .heading('#2', text='Date')
+        self.AllBillsViewTreeView .heading('#3', text='Total')
+        self.AllBillsViewTreeView .heading('#4', text='Profit')
+        self.AllBillsViewTreeView .heading('#5', text='Discount')
         self.AllBillsViewTreeView .column('#0')  # , stretch=tk.YES
         self.AllBillsViewTreeView .column('#1')  # , stretch=tk.YES
         self.AllBillsViewTreeView .column('#2')  # , stretch=tk.YES
         self.AllBillsViewTreeView .column('#3')  # , st retch=tk.YES
         self.AllBillsViewTreeView .column('#4')  # , st retch=tk.YES
+        self.AllBillsViewTreeView .column('#5')  # , st retch=tk.YES
         self.AllBillsViewTreeView.bind("<Return>",self.open_this_bill)
         self.AllBillsViewTreeView.bind("<Delete>",self.Delete_the_bill)
         self.tree_iterator = 0
@@ -281,13 +295,14 @@ class Toplevel1:
         try:
             conn = sqlite3.connect("MyDataBase.db")
             c = conn.cursor()
-            c.execute("SELECT * FROM Bills")
+            c.execute("SELECT Bill_Id,customer_name,today_date,Sale_earn,Profit,Discount FROM Bills")
             rows= c.fetchall()
+            tag_list = ['odd', 'even']
             for i in self.AllBillsViewTreeView.get_children():
                 self.AllBillsViewTreeView.delete(i)
             for id, row in enumerate(rows):
                 self.AllBillsViewTreeView.insert('', 'end', text=row[0],
-                                              values=( row[1], row[3], row[2],row[4]))  #
+                                              values=( row[1], row[2], row[3],row[4],row[5]),tags=(tag_list[self.tree_iterator%2],))  #
                 # Increment counter
                 self.tree_iterator = self.tree_iterator + 1
 
@@ -305,17 +320,45 @@ class Toplevel1:
                       f' from Sales, Stocks'
                       f' WHERE Billid = {item} and Item_Id = Itemid')
             rows =c.fetchall()
+            tag_list = ['odd', 'even']
             for i in self.Scrolledtreeview1.get_children():
                 self.Scrolledtreeview1.delete(i)
             for id,row in enumerate(rows):
 
                 self.Scrolledtreeview1.insert('', 'end', text=id,
-                                                 values=(row[0], row[1], row[3],row[2]))  #
+                                                 values=(row[0], row[1], row[3],row[2]),tags=(tag_list[self.tree_iterator%2],))  #
                 # Increment counter
                 self.tree_iterator = self.tree_iterator + 1
 
         except Error as e:
             print(e)
+
+    def get_by_name(self, event=None):
+        global conn, c
+        try:
+            sale = 0
+            profit = 0
+            conn = sqlite3.connect("MyDataBase.db")
+            c = conn.cursor()
+            name = self.name_entry.get()
+            c.execute(f'SELECT Bill_Id,customer_name,today_date,Sale_earn,Profit,Discount from Bills where customer_name = "{name}"')
+            rows = c.fetchall()
+            tag_list = ['odd', 'even']
+            for i in self.AllBillsViewTreeView.get_children():
+                self.AllBillsViewTreeView.delete(i)
+            for id, row in enumerate(rows):
+                self.AllBillsViewTreeView.insert('', 'end', text=row[0],
+                                                 values=(row[1], row[2], row[3], row[4], row[5]),
+                                                 tags=(tag_list[self.tree_iterator % 2],))  #
+                # Increment counter
+                self.tree_iterator = self.tree_iterator + 1
+            c.close()
+            conn.close()
+        except Error as e:
+            print(e)
+        finally:
+            conn.close()
+
 
     def GetSummary(self, event=None):
         global conn, c
@@ -335,14 +378,15 @@ class Toplevel1:
                     messagebox.showwarning("Invalid", "Please Fill All the fields")
                     return
                 e_date = datetime.strptime(e_date, "%Y-%m-%d")
-                c.execute(f'SELECT * from Bills where today_date = date("{e_date}")')
+                c.execute(f'SELECT Bill_Id,customer_name,today_date,Sale_earn,Profit,Discount from Bills where today_date = date("{e_date}")')
                 rows = c.fetchall()
+                tag_list = ['odd', 'even']
                 for i in self.AllBillsViewTreeView.get_children():
                     self.AllBillsViewTreeView.delete(i)
-                for row in rows:
-                    print(row)
+                for id, row in enumerate(rows):
                     self.AllBillsViewTreeView.insert('', 'end', text=row[0],
-                                                  values=(row[1], row[3],row[2]))  #
+                                                     values=(row[1], row[2], row[3], row[4], row[5]),
+                                                     tags=(tag_list[self.tree_iterator % 2],))  #
                     # Increment counter
                     self.tree_iterator = self.tree_iterator + 1
                     found = True
@@ -357,14 +401,14 @@ class Toplevel1:
                 else:
                     temp = "%-"+month+"-%"
                 print(temp)
-                c.execute(f'SELECT * from Bills where today_date like "{temp}"')
+                c.execute(f'SELECT Bill_Id,customer_name,today_date,Sale_earn,Profit,Discount from Bills where today_date like "{temp}"')
                 rows = c.fetchall()
                 for i in self.AllBillsViewTreeView.get_children():
                     self.AllBillsViewTreeView.delete(i)
                 for row in rows:
                     print(row)
                     self.AllBillsViewTreeView.insert('', 'end', text=row[0],
-                                                  values=(row[1], row[3],row[2]))  #
+                                                  values=(row[1], row[2],row[3],row[4],row[5]))  #
                     # Increment counter
                     self.tree_iterator = self.tree_iterator + 1
                     found = True
@@ -376,66 +420,21 @@ class Toplevel1:
 
                 temp = year+"-%"
                 print(temp)
-                c.execute(f'SELECT * from Bills where today_date like "{temp}"')
+                c.execute(f'SELECT Bill_Id,customer_name,today_date,Sale_earn,Profit,Discount from Bills where today_date like "{temp}"')
                 rows = c.fetchall()
                 for i in self.AllBillsViewTreeView.get_children():
                     self.AllBillsViewTreeView.delete(i)
                 for row in rows:
                     print(row)
                     self.AllBillsViewTreeView.insert('', 'end', text=row[0],
-                                                  values=(row[1], row[3],row[2]))  #
+                                                  values=(row[1], row[2],row[3],row[4],row[5]))  #
                     # Increment counter
                     self.tree_iterator = self.tree_iterator + 1
                     found = True
-            elif self.i.get() == 4:
-                day1 =0
-                day2 =0
-                if len(day) ==0 or  len(month) == 0 or len(year) ==0 :
-                    messagebox.showwarning("Invalid", "Please Fill All the fields")
-                    return
-                week = self.WeekEntry.get()
-                if len(week) == 0:
-                    messagebox.showwarning("Invalid", "Please Fill the week field")
-                    return
-
-                if len(month)==1:
-                    month = "0"+month
-
-                if week == '1':
-                    day1 = '1'
-                    day2 = '8'
-                elif week =='2':
-                    day1 = '9'
-                    day2 = '16'
-                elif week =='3':
-                    day1 = '17'
-                    day2 = '24'
-                elif week =='4':
-                    day1 = '25'
-                    day2 = '31'
-                e_date1 = year + '-' + month + '-' + day1
-                e_date2 = year + '-' + month + '-' + day2
-
-                print(e_date1)
-                print(e_date2)
-                c.execute(f'SELECT * from Bills where today_date BETWEEN date("{e_date1}") AND date("{e_date2}")')
-                rows = c.fetchall()
-                for i in self.AllBillsViewTreeView.get_children():
-                    self.AllBillsViewTreeView.delete(i)
-                for row in rows:
-                    print(row)
-                    self.AllBillsViewTreeView.insert('', 'end', text=row[0],
-                                                  values=(row[1], row[3],row[2]))  #
-                    # Increment counter
-                    self.tree_iterator = self.tree_iterator + 1
-                    found = True
-
             else:
                 messagebox.showwarning("Missing", "Please Select one option")
-
-
             if not found:
-                messagebox.showinfo("Not Found", "No Record Found of this name")
+                messagebox.showinfo("Not Found", "No Bill Found...!")
 
             c.close()
             conn.close()

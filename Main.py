@@ -30,6 +30,7 @@ import AddStock
 import SaleSummary
 import BillsViewer
 import customer
+import Ledger
 
 def vp_start_gui():
     '''Starting point when module is the main routine.'''
@@ -37,6 +38,9 @@ def vp_start_gui():
     global val, w, root
     print("1")
     root = tk.Tk()
+    bg = tk.PhotoImage(file="slide-content-3.png")
+    label = tk.Label(root,image=bg)
+    label.place(x=275,y=400)
     print("2")
     root.resizable(0,0)
     print("3")
@@ -46,6 +50,7 @@ def vp_start_gui():
     root.mainloop()
 
 w = None
+stock_limit = 100
 def create_main(root, *args, **kwargs):
     '''Starting point when module is imported by another program.'''
     print("create main calling")
@@ -126,7 +131,20 @@ class Main:
 
         tk.Button(root, command=(Aclick), text='OK',width = 11).pack(side='top')
         root.mainloop()
-
+    def less_stocks_stats(self):
+        global conn, stock_limit
+        try:
+            conn = sqlite3.connect("MyDataBase.db")
+            c = conn.cursor()
+            c.execute(
+                'SELECT Quantity From Stocks')
+            rows = c.fetchall()
+            for row in rows:
+                if int(row[0]) < stock_limit:
+                    return True
+        except Error as e:
+            print(e)
+        return False
     def launchSaleSummary(self, top):
         top.destroy()
         SaleSummary.launchWindow()
@@ -138,6 +156,10 @@ class Main:
     def LaunchAddStock(self,top):
         top.destroy()
         AddStock.launchWindow()
+
+    def LaunchLedger(self,top):
+        top.destroy()
+        Ledger.LaunchWindow()
 
     def LaunchAddCustomer(self,top):
         top.destroy()
@@ -166,7 +188,7 @@ class Main:
         _fgcolor = '#000000'  # X11 color: 'black'
         _compcolor = '#d9d9d9' # X11 color: 'gray85'
         _ana1color = '#d9d9d9' # X11 color: 'gray85'
-        _ana2color = '#ececec' # Closest X11 color: 'gray92' 
+        _ana2color = '#ececec' # Closest X11 color: 'gray92'
         font10 = "-family {DejaVu Sans} -size 30 -weight bold -slant "  \
             "roman -underline 0 -overstrike 0"
         font11 = "-family {DejaVu Sans} -size 20 -weight normal -slant"  \
@@ -175,10 +197,9 @@ class Main:
                  " roman -underline 0 -overstrike 0"
 
         top.geometry("1164x769")
-        top.title("Al-Ferooz Garments")
-
+        top.title("Asif Softwares")
         self.MakeBillButton = tk.Button(top)
-        self.MakeBillButton.place(relx=0.137, rely=0.377, height=61, width=251)
+        self.MakeBillButton.place(relx=0.137, rely=0.377, height=61, width=261)
         self.MakeBillButton.configure(font=font11)
         self.MakeBillButton.configure(text='''Make A Bill''')
         self.MakeBillButton.configure(width=251)
@@ -191,51 +212,51 @@ class Main:
         # self.UpdateStockButton.configure(text='''Update Stocks''')
         # self.UpdateStockButton.configure(width=221)
 
-        # self.StockSummaryButton = tk.Button(top)
-        # self.StockSummaryButton.place(relx=0.137, rely=0.494, height=61, width=251)
-        # self.StockSummaryButton.configure(font=font11)
-        # self.StockSummaryButton.configure(text='''Stock Summary''')
-        # self.StockSummaryButton.configure(width=251)
+        self.LedgerButton = tk.Button(top)
+        self.LedgerButton.place(relx=0.377, rely=0.494, height=61, width=251)
+        self.LedgerButton.configure(font=font11)
+        self.LedgerButton.configure(text='''Ledger''')
+        self.LedgerButton.configure(width=251,command = lambda :self.LaunchLedger(top))
 
         self.SaleSummaryButton = tk.Button(top)
         self.SaleSummaryButton.place(relx=0.61, rely=0.377, height=61, width=261)
         self.SaleSummaryButton.configure(font=font11)
-        self.SaleSummaryButton.configure(text='''Sale Summary''')
+        self.SaleSummaryButton.configure(text='''Sales''')
         self.SaleSummaryButton.configure(width=261,command = lambda :self.launchSaleSummary(top))
 
         self.AddStockButton = tk.Button(top)
         self.AddStockButton.place(relx=0.61, rely=0.494, height=61, width=261)
         self.AddStockButton.configure(font=font11)
-        self.AddStockButton.configure(text='''Add Stock''')
+        self.AddStockButton.configure(text='''Inventory''')
         self.AddStockButton.configure(width=261,command=lambda :self.LaunchAddStock(top) )
 
 
         self.ViewBillsButton = tk.Button(top)
-        self.ViewBillsButton.place(relx=0.387, rely=0.494, height=61, width=221)
+        self.ViewBillsButton.place(relx=0.137, rely=0.494, height=61, width=261)
         self.ViewBillsButton.configure(font=font11)
-        self.ViewBillsButton.configure(text='''View Bills''')
+        self.ViewBillsButton.configure(text='''Bill Book''')
         self.ViewBillsButton.configure(width=221)
         self.ViewBillsButton.configure(command = lambda :self.LaunchViewbills(top))
 
         self.Label1 = tk.Label(top)
         self.Label1.place(relx=0.198, rely=0.221, height=62, width=593)
         self.Label1.configure(font=font10)
-        self.Label1.configure(text='''Al- Ferooz Garments''')
+        self.Label1.configure(text='''Asif Softwares''')
         self.Label1.configure(width=593)
 
         self.AddCustomerButton = tk.Button(top)
-        self.AddCustomerButton.place(relx=0.223, rely=0.611, height=61
-                , width=231)
+        self.AddCustomerButton.place(relx=0.377, rely=0.377, height=61
+                , width=251)
         self.AddCustomerButton.configure(font=font11)
-        self.AddCustomerButton.configure(text='''Add Customer''')
+        self.AddCustomerButton.configure(text='''Customers''')
         self.AddCustomerButton.configure(width=231)
         self.AddCustomerButton.configure(width=261, command=lambda: self.LaunchAddCustomer(top))
 
-        self.SpendingsButton = tk.Button(top)
-        self.SpendingsButton.place(relx=0.473, rely=0.611, height=61, width=241)
-        self.SpendingsButton.configure(font=font11)
-        self.SpendingsButton.configure(text='''Spendings''')
-        self.SpendingsButton.configure(width=241)
+        # self.SpendingsButton = tk.Button(top)
+        # self.SpendingsButton.place(relx=0.473, rely=0.611, height=61, width=241)
+        # self.SpendingsButton.configure(font=font11)
+        # self.SpendingsButton.configure(text='''Spendings''')
+        # self.SpendingsButton.configure(width=241)
 
 
         self.timeLabel = tk.Label(top)
@@ -259,6 +280,14 @@ class Main:
         self.Label4.configure(image=self._img1)
         self.Label4.configure(width=599)
         # self.Label4.configure(wraplength="599")
+
+
+        if self.less_stocks_stats():
+            self.alert_image = tk.PhotoImage(file="./images/alert_icon.png")
+            self.alert_image_label = tk.Label(top)
+            self.alert_image_label.place(relx=0.9, rely=0.1, height=100, width=100)
+            self.alert_image_label.configure(image=self.alert_image)
+            # self.alert_image_label.configure(width=599)
 
         # self.Button7 = tk.Button(top)
         # self.Button7.place(relx=0.885, rely=0.91, height=31, width=121)

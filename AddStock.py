@@ -27,32 +27,33 @@ except ImportError:
     import tkinter.ttk as ttk
     py3 = True
 
-import AddStock_support
+# import AddStock_support
 
 def vp_start_gui():
     '''Starting point when module is the main routine.'''
+
     global val, w, root
     root = tk.Tk()
     top = AddStock (root)
-    AddStock_support.init(root, top)
+    # AddStock_support.init(root, top)
     root.mainloop()
 
-
+root =None
 w = None
-def create_AddStock(root, *args, **kwargs):
-    '''Starting point when module is imported by another program.'''
-    print("create stock is calling...")
-    global w, w_win, rt
-    rt = root
-    w = tk.Toplevel (root)
-    top = AddStock (w)
-    AddStock_support.init(w, top, *args, **kwargs)
-    return (w, top)
+# def create_AddStock(root, *args, **kwargs):
+#     '''Starting point when module is imported by another program.'''
+#     print("create stock is calling...")
+#     global w, w_win, rt
+#     rt = root
+#     w = tk.Toplevel (root)
+#     top = AddStock (w)
+#     AddStock_support.init(w, top, *args, **kwargs)
+#     return (w, top)
 
-def destroy_AddStock(root):
-    print("some thing")
-    root.destroy()
-    Main.vp_start_gui()
+# def destroy_AddStock(root):
+#     print("some thing")
+#     root.destroy()
+#     Main.vp_start_gui()
 
 class AddStock:
     CurrentItem = []
@@ -107,6 +108,7 @@ class AddStock:
                 c.close()
                 conn.close()
                 self.AddNewButton.config(state="normal")
+                self.ViewStocks()
 
 
 
@@ -165,11 +167,19 @@ class AddStock:
             rows = c.fetchall()
             found = True
             total = 0
+            tag_list = ['odd', 'even']
             for i in self.Scrolledtreeview1.get_children():
                 self.Scrolledtreeview1.delete(i)
             for row in rows:
+                tag = ""
+                if row[2] < 100:
+                    tag = "lightred"
+                else:
+                    tag = tag_list[self.tree_iterator % 2]
+
                 self.Scrolledtreeview1.insert('', 'end', text=row[0],
-                                              values=(row[1], row[2], row[5], row[6], row[7]))
+                                              values=(row[1], row[2], row[5], row[6], row[7]),
+                                              tags=(tag,))
                 # Increment counter
                 total+=(row[2]*row[5])
                 self.tree_iterator = self.tree_iterator + 1
@@ -190,17 +200,19 @@ class AddStock:
             bPrice = self.BuyingPriceEntry.get()
             sPrice = self.SellingPriceEntry.get()
             if len(name) > 0 and len(quantity) > 0 and len(bPrice) > 0 and len(sPrice) > 0 :
-
-                data = name,quantity,"barcode","picture",bPrice,sPrice,int(0)
-                c.execute('INSERT INTO Stocks(Name,Quantity,Barcode,picture,buying_price,sale_price,profit) VALUES (?,?,?,?,?,?,?)',data)
-                conn.commit()
-                messagebox.showinfo("Done","Add Successfully")
-                self.NameEntry.delete(0, 'end')
-                self.QuantityEntry.delete(0, 'end')
-                self.BuyingPriceEntry.delete(0, 'end')
-                self.SellingPriceEntry.delete(0, 'end')
-                self.NameEntry.focus()
-
+                c.execute(f'SELECT * FROM Stocks WHERE Name is "{name}"')
+                if (c.fetchall().__len__() == 0):
+                    data = name,quantity,"barcode","picture",bPrice,sPrice,int(0)
+                    c.execute('INSERT INTO Stocks(Name,Quantity,Barcode,picture,buying_price,sale_price,profit) VALUES (?,?,?,?,?,?,?)',data)
+                    conn.commit()
+                    messagebox.showinfo("Done","Add Successfully")
+                    self.NameEntry.delete(0, 'end')
+                    self.QuantityEntry.delete(0, 'end')
+                    self.BuyingPriceEntry.delete(0, 'end')
+                    self.SellingPriceEntry.delete(0, 'end')
+                    self.NameEntry.focus()
+                else:
+                    messagebox.showinfo("ERROR", "Product with this name already exists...!")
             else:
                 messagebox.showerror("Error","Fill All the Fields")
             # c.execute('SELECT * from Stocks')
@@ -326,6 +338,7 @@ class AddStock:
         self.Scrolledtreeview1.bind("<ButtonRelease-1>",self.confirmUpdate)
         self.Scrolledtreeview1.tag_configure('odd', background='#E8E8E8')
         self.Scrolledtreeview1.tag_configure('even', background='#DFDFDF')
+        self.Scrolledtreeview1.tag_configure('lightred', background='#FF7F7F')
         # self.tree = ttk.Treeview(self.parent, columns=('Dose', 'Modification date'))
         self.Scrolledtreeview1.heading('#0', text='ID')
         self.Scrolledtreeview1.heading('#1', text='Name')
@@ -367,7 +380,6 @@ class AddStock:
 
     def __del__(self):
         print("something to print")
-        # destroy_AddStock(self.root)
         Main.LaunchWindow()
         self.c.close()
         self.conn.close()

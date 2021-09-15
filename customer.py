@@ -8,8 +8,10 @@
 import sys
 import datetime
 import sqlite3
+import time
 from sqlite3 import Error
-from tkinter import messagebox
+from threading import Thread
+from tkinter import messagebox, simpledialog
 import Main
 
 try:
@@ -35,6 +37,7 @@ def vp_start_gui():
     root.mainloop()
 
 w = None
+root = None
 def create_Toplevel1(root, *args, **kwargs):
     '''Starting point when module is imported by another program.'''
     global w, w_win, rt
@@ -53,7 +56,8 @@ class Toplevel1:
     parent = None
     top = None
     cursor = None
-    def __init__(self, top=None,Phone =  None,cursor = None):
+
+    def __init__(self, top=None, Name=None, Phone=None, balance=0,cursor=None):
         '''This class configures and populates the toplevel window.
            top is the toplevel containing window.'''
         _bgcolor = '#d9d9d9'  # X11 color: 'gray85'
@@ -63,14 +67,16 @@ class Toplevel1:
         _ana2color = '#ececec' # Closest X11 color: 'gray92'
         font10 = "-family {DejaVu Sans} -size 24 -weight bold -slant "  \
             "roman -underline 0 -overstrike 0"
-        font9 = "-family {DejaVu Sans} -size 15 -weight normal -slant " \
+        font9 = "-family {DejaVu Sans} -size 20 -weight normal -slant " \
+                 "roman -underline 0 -overstrike 0"
+        customized_font = "-family {Calibri} -size 15 -weight normal -slant " \
                  "roman -underline 0 -overstrike 0"
         self.style = ttk.Style()
         if sys.platform == "win32":
             self.style.theme_use('winnative')
         self.style.configure('.',background=_bgcolor)
         self.style.configure('.',foreground=_fgcolor)
-        self.style.configure('.',font="TkDefaultFont")
+        self.style.configure('.',font=customized_font)
         self.style.map('.',background=
             [('selected', _compcolor), ('active',_ana2color)])
         top.geometry("880x753+640+142")
@@ -98,7 +104,7 @@ class Toplevel1:
         self.TLabel1.place(relx=0.085, rely=0.133, height=29, width=61)
         self.TLabel1.configure(background="#d9d9d9")
         self.TLabel1.configure(foreground="#000000")
-        self.TLabel1.configure(font="TkDefaultFont")
+        self.TLabel1.configure(font=customized_font)
         self.TLabel1.configure(relief='flat')
         self.TLabel1.configure(text='''Name''')
         self.TLabel1.configure(width=61)
@@ -107,16 +113,16 @@ class Toplevel1:
         self.TLabel1_1.place(relx=0.403, rely=0.133, height=19, width=62)
         self.TLabel1_1.configure(background="#d9d9d9")
         self.TLabel1_1.configure(foreground="#000000")
-        self.TLabel1_1.configure(font="TkDefaultFont")
+        self.TLabel1_1.configure(font=customized_font)
         self.TLabel1_1.configure(relief='flat')
         self.TLabel1_1.configure(text='''Phone#''')
         self.TLabel1_1.configure(width=62)
 
         self.TLabel1_3 = ttk.Label(top)
-        self.TLabel1_3.place(relx=0.028, rely=0.199, height=29, width=102)
+        self.TLabel1_3.place(relx=0.01, rely=0.199, height=29, width=132)
         self.TLabel1_3.configure(background="#d9d9d9")
         self.TLabel1_3.configure(foreground="#000000")
-        self.TLabel1_3.configure(font="TkDefaultFont")
+        self.TLabel1_3.configure(font=customized_font)
         self.TLabel1_3.configure(relief='flat')
         self.TLabel1_3.configure(text='''Shop Address''')
         self.TLabel1_3.configure(width=102)
@@ -125,14 +131,14 @@ class Toplevel1:
         top.configure(menu = self.menubar)
 
         self.AddCustomerBtn = ttk.Button(top)
-        self.AddCustomerBtn.place(relx=0.79, rely=0.153, height=28, width=103)
+        self.AddCustomerBtn.place(relx=0.79, rely=0.2, height=28, width=130)
         self.AddCustomerBtn.configure(takefocus="")
         self.AddCustomerBtn.configure(text='''Add Customer''')
         self.AddCustomerBtn.configure(command = self.AddCustomer)
 
-        self.style.configure('mystyle.Treeview.Heading')
+        self.style.configure('mystyle.Treeview.Heading',font=('Calibri',16,"bold"))
         self.style.configure("mystyle.Treeview", highlightthickness=0, bd=0,
-                             font=('Calibri', 14))  # Modify the font of the body
+                             font=('Calibri', 15),rowheight=40)  # Modify the font of the body
         self.Scrolledtreeview1 = ScrolledTreeView(top, style="mystyle.Treeview", columns=('Due Amount', 'PhoneNum','Address'))
         self.Scrolledtreeview1.place(relx=0.057, rely=0.372, relheight=0.546
                 , relwidth=0.898)
@@ -140,13 +146,17 @@ class Toplevel1:
         self.Scrolledtreeview1.tag_configure('even', background='#DFDFDF')
         # self.tree = ttk.Treeview(self.parent, columns=('Dose', 'Modification date'))
         self.Scrolledtreeview1.heading('#0', text='Name')
-        self.Scrolledtreeview1.heading('#1', text='Due_Amount')
-        self.Scrolledtreeview1.heading('#2', text='Phone_number')
-        self.Scrolledtreeview1.heading('#3', text='Address')
+        self.Scrolledtreeview1.heading('#1', text='Balance')
+        self.Scrolledtreeview1.heading('#2', text='Phone #')
+        self.Scrolledtreeview1.heading('#3', text='Address', anchor='n')
         self.Scrolledtreeview1.column('#0')  # , stretch=tk.YES
-        self.Scrolledtreeview1.column('#1')  # , stretch=tk.YES
-        self.Scrolledtreeview1.column('#2')  # , stretch=tk.YES
-        self.Scrolledtreeview1.column('#3')  # , stretch=tk.YES
+        self.Scrolledtreeview1.column('#1',width=150)  # , stretch=tk.YES
+        self.Scrolledtreeview1.column('#2',width=150)  # , stretch=tk.YES
+        self.Scrolledtreeview1.column('#3', width=400)  # , stretch=tk.YES
+        self.Scrolledtreeview1.bind("<Return>", self.updateBalance)
+        self.Scrolledtreeview1.bind("<Delete>", self.deleteCustomer)
+
+
         self.tree_iterator = 0
 
         self.TLabel2 = ttk.Label(top)
@@ -158,22 +168,40 @@ class Toplevel1:
         self.TLabel2.configure(text='''Customers''')
         self.TLabel2.configure(width=232)
 
-        self.SearchPhone = ttk.Entry(top)
-        self.SearchPhone.place(relx=0.227, rely=0.305, relheight=0.041, relwidth=0.232)
-        self.SearchPhone.configure(takefocus="")
-        self.SearchPhone.configure(cursor="xterm",font = font9)
+        self.customer_name_Entry = ttk.Entry(top)
+        self.customer_name_Entry.place(relx=0.2, rely=0.305, relheight=0.050, relwidth=0.532)
+        self.customer_name_Entry.configure(takefocus="")
+        self.customer_name_Entry.configure(cursor="xterm", font = font9)
+
+
+
+
+        self.TLabel1_1 = ttk.Label(top)
+        self.TLabel1_1.place(relx=0.720, rely=0.133, relheight=0.041, relwidth=0.232)
+        self.TLabel1_1.configure(background="#d9d9d9")
+        self.TLabel1_1.configure(foreground="#000000")
+        self.TLabel1_1.configure(font=customized_font)
+        self.TLabel1_1.configure(relief='flat')
+        self.TLabel1_1.configure(text='''Balance:''')
+        self.TLabel1_1.configure(width=62)
+
+        self.customer_balance = ttk.Entry(top)
+        self.customer_balance.place(relx=0.800, rely=0.133, relheight=0.041, relwidth=0.125)
+        self.customer_balance.configure(width=204)
+        self.customer_balance.configure(takefocus="")
+        self.customer_balance.configure(cursor="xterm",font = font9)
 
         self.TLabel1_2 = ttk.Label(top)
-        self.TLabel1_2.place(relx=0.057, rely=0.312, height=19, width=132)
+        self.TLabel1_2.place(relx=0.050, rely=0.315, height=19, width=132)
         self.TLabel1_2.configure(background="#d9d9d9")
         self.TLabel1_2.configure(foreground="#000000")
-        self.TLabel1_2.configure(font="TkDefaultFont")
+        self.TLabel1_2.configure(font=customized_font)
         self.TLabel1_2.configure(relief='flat')
-        self.TLabel1_2.configure(text='''Search by Phone#''')
+        self.TLabel1_2.configure(text='''Customer Name''')
         self.TLabel1_2.configure(width=132)
 
         self.TButton1_3 = ttk.Button(top)
-        self.TButton1_3.place(relx=0.489, rely=0.305, height=28, width=103)
+        self.TButton1_3.place(relx=0.759, rely=0.310, height=28, width=130)
         self.TButton1_3.configure(takefocus="")
         self.TButton1_3.configure(text='''Get Customer''')
         self.TButton1_3.configure(command = self.getCustomer)
@@ -182,22 +210,82 @@ class Toplevel1:
         self.TSeparator1.place(relx=0.006, rely=0.266, relwidth=0.989)
 
         if Phone != None:
+            self.cursor = cursor
             self.PhoneNumber.insert(0, Phone)
+            self.customer_balance.insert(0,balance)
             self.parent = Phone
             self.top = top
-            self.cursor = cursor
+        if Name is not None:
+            self.Name.insert(0,Name)
+
+
     def __del__(self):
         if self.cursor == None:
             Main.LaunchWindow()
 
+    def refresh_Table(self,where_clause=''):
+        pass
+    def updateBalance(self, event=None):
+        global root
+        date = datetime.datetime.now()
+        date=date.strftime("%Y-%m-%d")
+        print(date)
+        curItem = self.Scrolledtreeview1.focus()
+        item = self.Scrolledtreeview1.item(curItem)
+        name = item['text']
+        old_balance = item['values'][0]
+        phone_number = "0"+str(item['values'][1])
 
+        received = simpledialog.askstring("Input","Enter Received Amount",
+                                        parent=root)
+        Note = simpledialog.askstring("Input", "Here you can type any Note or Reminder",
+                                          parent=root)
+
+        new_balance = int(old_balance) - int(received)
+        print(new_balance)
+        print(phone_number)
+        global conn
+        try:
+            conn = sqlite3.connect("MyDataBase.db")
+            c = conn.cursor()
+            c.execute(f'UPDATE Customers SET Due_Amount = {new_balance} WHERE PhoneNumber = "{phone_number}"')
+            c.execute(f'INSERT INTO Ledger(customerName,receivingDate,ReceivedAmount,Due_Amount,Note)VALUES ("{name}","{date}","{received}","{new_balance}","{Note}")')
+            conn.commit()
+            self.getCustomer()
+
+        except Error as e:
+            print(e)
+
+    def deleteCustomer(self,event=None):
+        curItem = self.Scrolledtreeview1.focus()
+        item = self.Scrolledtreeview1.item(curItem)
+        phone_number = "0" + str(item['values'][1])
+        name = item['text']
+        print(name)
+        choice = messagebox.askyesno("confirmation", "Do you want to Delete this Customer?")
+        if choice:
+            global conn
+            try:
+                conn = sqlite3.connect("MyDataBase.db")
+                c = conn.cursor()
+
+                c.execute(f'DELETE FROM Customers WHERE C_Name = "{name}"')
+                c.execute(f'DELETE FROM Ledger WHERE customerName = "{name}"')
+                self.Scrolledtreeview1.delete(curItem)
+                conn.commit()
+
+
+
+            except Error as e:
+                print(e)
 
     def AddCustomer(self,event = None):
-        Name = self.Name.get()
+        Name = self.Name.get().lower()
         Phn = self.PhoneNumber.get()
+        blnc = int(self.customer_balance.get())
         Addr = self.Address.get()
         if self.parent != None:
-            self.cursor.execute(f'INSERT INTO Customers(C_Name,Due_Amount,PhoneNumber,Address)VALUES ("{Name}",0,"{Phn}","{Addr}")')
+            self.cursor.execute(f'INSERT INTO Customers(C_Name,Due_Amount,PhoneNumber,Address)VALUES ("{Name}",{blnc},"{Phn}","{Addr}")')
             self.top.destroy()
             return
 
@@ -205,28 +293,33 @@ class Toplevel1:
         try:
             conn = sqlite3.connect("MyDataBase.db")
             c = conn.cursor()
-            c.execute(f'INSERT INTO Customers(C_Name,Due_Amount,PhoneNumber,Address)VALUES ("{Name}",0,"{Phn}","{Addr}")')
+            c.execute(f'INSERT INTO Customers(C_Name,Due_Amount,PhoneNumber,Address)VALUES ("{Name}",{blnc},"{Phn}","{Addr}")')
             conn.commit()
             self.Name.delete(0,'end')
             self.PhoneNumber.delete(0,'end')
             self.Address.delete(0,'end')
+            self.customer_balance.delete(0,'end')
             messagebox.showinfo("Done", "Customer added...!")
 
         except Error as e:
-            print(e)
+            if "UNIQUE" in e.__str__():
+                messagebox.showinfo("Error","Some customer with this number already added...!")
 
     def getCustomer(self):
-        phone = self.SearchPhone.get()
+        for i in self.Scrolledtreeview1.get_children():
+            self.Scrolledtreeview1.delete(i)
+        customer_name = self.customer_name_Entry.get().lower()
         global conn
         try:
             conn = sqlite3.connect("MyDataBase.db")
             c = conn.cursor()
-            c.execute(f'SELECT * FROM Customers WHERE PhoneNumber = "{phone}"')
+            c.execute(f'SELECT * FROM Customers WHERE C_Name like "{customer_name}%"')
             rows = c.fetchall()
+            tag_list = ['odd', 'even']
             for row in rows:
                 # print(row)
                 self.Scrolledtreeview1.insert('', 'end', text=row[0],
-                                              values=(row[1], row[2],row[3]))  #
+                                              values=(row[1], row[2],row[3]),tags=(tag_list[self.tree_iterator%2],))  #
                 # Increment counter
                 self.tree_iterator = self.tree_iterator + 1
                 found = True

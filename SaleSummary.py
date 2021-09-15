@@ -77,12 +77,14 @@ class Toplevel1:
             "-slant roman -underline 0 -overstrike 0"
         font9 = "-family {DejaVu Sans} -size 30 -weight normal -slant "  \
             "roman -underline 0 -overstrike 0"
+        customized_font = "-family {Calibri} -size 15 -weight normal -slant " \
+                          "roman -underline 0 -overstrike 0"
         self.style = ttk.Style()
         if sys.platform == "win32":
             self.style.theme_use('winnative')
         self.style.configure('.',background=_bgcolor)
         self.style.configure('.',foreground=_fgcolor)
-        self.style.configure('.',font="TkDefaultFont")
+        self.style.configure('.',font=customized_font)
         self.style.map('.',background=
             [('selected', _compcolor), ('active',_ana2color)])
 
@@ -189,16 +191,15 @@ class Toplevel1:
 
         self.GetSummaryButton = tk.Button(top)
         self.GetSummaryButton.place(relx=0.8, rely=0.175, height=41, width=131)
-        self.GetSummaryButton.configure(text='''Get Summary''')
+        self.GetSummaryButton.configure(text='''Filter''')
         self.GetSummaryButton.configure(width=131)
-        self.GetSummaryButton.configure(command=lambda :self.GetSummary(Option=1))
+        self.GetSummaryButton.configure(command=lambda :self.date_filtered_summary(Option=1))
 
         self.style.configure('mystyle.Treeview.Heading',  font=font10)
         self.style.configure("mystyle.Treeview", highlightthickness=0, bd=0,
                         font=('Calibri', 15))  # Modify the font of the body
-        self.Scrolledtreeview1 = ScrolledTreeView(top,style = "mystyle.Treeview",columns =('Sale','Profit'))
-        self.Scrolledtreeview1.place(relx=0.026, rely=0.422, relheight=0.54
-                , relwidth=0.948)
+        self.Scrolledtreeview1 = ScrolledTreeView(top,style = "mystyle.Treeview",columns =('Sale','Profit','item sold'))
+        self.Scrolledtreeview1.place(relx=0.026, rely=0.422, relheight=0.54, relwidth=0.948)
 
         self.Scrolledtreeview1.tag_configure('odd', background='#E8E8E8')
         self.Scrolledtreeview1.tag_configure('even', background='#DFDFDF')
@@ -206,25 +207,30 @@ class Toplevel1:
         self.Scrolledtreeview1.heading('#0', text='Name')
         self.Scrolledtreeview1.heading('#1', text='Sale')
         self.Scrolledtreeview1.heading('#2', text='Profit')
+        self.Scrolledtreeview1.heading('#3', text='item sold')
+
         self.Scrolledtreeview1.column('#0')#, stretch=tk.YES
         self.Scrolledtreeview1.column('#1')#, stretch=tk.YES
         self.Scrolledtreeview1.column('#2')#, stretch=tk.YES
+        self.Scrolledtreeview1.column('#3')#, stretch=tk.YES
         self.tree_iterator = 0
 
 
         self.GetSalesButton = tk.Button(top)
         self.GetSalesButton.place(relx=0.8, rely=0.275, height=41, width=131)
         self.GetSalesButton.configure(activebackground="#f9f9f9")
-        self.GetSalesButton.configure(text='''Get Sales/item''')
-        self.GetSalesButton.configure(command=lambda :self.GetSummary(Option=2))
+        self.GetSalesButton.configure(text='''Get All Sales''')
+        self.GetSalesButton.configure(command=lambda :self.get_all_sales())
 
         self.Label4 = tk.Label(self.Frame1)
-        self.Label4.place(relx=0.642, rely=0.242, height=21, width=32)
-        self.Label4.configure(text='''Sale''')
+        self.Label4.place(relx=0.550, rely=0.242, height=21, width=200)
+        self.Label4.configure(text='''Total Sale''')
+        self.Label4.configure(font=("Calibri",15))
 
         self.Label5 = tk.Label(self.Frame1)
-        self.Label5.place(relx=0.636, rely=0.576, height=21, width=39)
-        self.Label5.configure(text='''Profit''')
+        self.Label5.place(relx=0.540, rely=0.576, height=21, width=200)
+        self.Label5.configure(text='''Total Profit''')
+        self.Label5.configure(font=("Calibri",15))
 
         self.SaleTextView = tk.Entry(self.Frame1)
         self.SaleTextView.place(relx=0.739, rely=0.182, relheight=0.233, relwidth = 0.165)
@@ -268,8 +274,42 @@ class Toplevel1:
     #         print(e)
     #     finally:
     #         conn.close()
+    def get_all_sales(self,event=None):
+        global conn, c
+        try:
+            sale = 0
+            profit = 0
+            conn = sqlite3.connect("MyDataBase.db")
+            c = conn.cursor()
+            c.execute(f'SELECT ItemName,SUM(Item_total),SUM(Item_profit),SUM(Item_quantitty) FROM Sales group by ItemName')
+            rows = c.fetchall()
+            print(rows.__len__())
+            for i in self.Scrolledtreeview1.get_children():
+                self.Scrolledtreeview1.delete(i)
+            for row in rows:
+                profit += row[2]
+                sale += row[1]
+                tag_list = ['odd', 'even']
+                tag = tag_list[self.tree_iterator % 2]
 
-    def GetSummary(self, event=None,Option=None):
+                self.Scrolledtreeview1.insert('', 'end', text=row[0],
+                                              values=(row[1], row[2], row[3]),
+                                              tags=(tag,))  #
+                # Increment counter
+                self.tree_iterator = self.tree_iterator + 1
+                self.ProfitTextView.delete(0, 'end')
+                self.SaleTextView.delete(0, 'end')
+                self.ProfitTextView.insert(0, profit)
+                self.SaleTextView.insert(0, sale)
+            c.close()
+            conn.close()
+        except Error as e:
+            print(e)
+        finally:
+            conn.close()
+    def populate_treeview(self,row):
+        pass
+    def date_filtered_summary(self, event=None, Option=None):
         global conn, c
         try:
             sale = 0
@@ -287,20 +327,19 @@ class Toplevel1:
                     messagebox.showwarning("Invalid", "Please Fill All the fields")
                     return
                 e_date = datetime.strptime(e_date, "%Y-%m-%d")
-                if Option == 2:
-                    c.execute(f'SELECT Billid, Itemid,Name,sum(Item_total),sum(Item_profit)' 
-                              f' from Stocks'
-                              f' INNER JOIN (SELECT * From Sales WHERE Billid IN (SELECT Bill_Id from Bills where today_date = date("{e_date}"))) ON Itemid = Item_Id'
-                              f' GROUP BY Itemid')
-                    rows = c.fetchall()
-                    for row in rows:
-                        # print(row)
-                        self.Scrolledtreeview1.insert('', 'end', text=row[2],
-                                                      values=(row[3], row[4]))  #
-                        # Increment counter
-                        self.tree_iterator = self.tree_iterator + 1
-                        found = True
-                elif Option==1:
+                # if Option == 2:
+                #
+                #     c.execute(f'SELECT ItemName,SUM(Item_total),SUM(Item_profit),SUM(Item_quantitty) FROM Sales group by ItemName')
+                #     rows = c.fetchall()
+                #     print(rows.__len__())
+                #     for row in rows:
+                #         self.Scrolledtreeview1.insert('', 'end', text=row[0],
+                #                                       values=(row[1], row[2],row[3]))  #
+                #         # Increment counter
+                #         self.tree_iterator = self.tree_iterator + 1
+                #         found = True
+                # elif Option==1:
+                if Option==1:
                     c.execute(f'SELECT * from Bills where today_date = date("{e_date}")')
                     rows = c.fetchall()
                     for row in rows:
@@ -338,7 +377,6 @@ class Toplevel1:
                         profit += row[2]
                         sale += row[3]
                         found = True
-
             elif self.i.get() == 3:
                 if len(year)==0:
                     messagebox.showwarning("Invalid", "Please Fill the year field")
@@ -424,6 +462,7 @@ class Toplevel1:
 
             else:
                 messagebox.showwarning("Missing", "Please Select one option")
+                return
 
 
             if not found:

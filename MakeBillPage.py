@@ -123,14 +123,15 @@ class MakeBillPage:
         id = row[0][0]
         price = row[0][6]
 
-        self.ProductCodeEntry.delete(0, 'end')
+        self.ProductCodeEntry.configure(text='code')
+        # self.ProductCodeEntry.delete(0, 'end')
         self.PriceEntry.delete(0, 'end')
-        self.ProductCodeEntry.insert(0, id)
+        self.ProductCodeEntry.configure(text=id)
         self.PriceEntry.insert(0, price)
 
     def flush_fields(self):
         self.QuantityEntry.delete(0, 'end')
-        self.ProductCodeEntry.delete(0, 'end')
+        self.ProductCodeEntry.configure(text='0')
         self.PriceEntry.delete(0, 'end')
         self.SearchNameEntry.delete(0, 'end')
         self.CutEntry.delete(0, 'end')
@@ -191,17 +192,18 @@ class MakeBillPage:
         # self.ProductCodeEntry.insert(0, id)
         self.AddToList()
 
-    def addcustomer(self, cursor=None):
+    def addcustomer(self, cursor=None, class_=None):
         customer_phone_num = self.CustomerPhone.get()
         customer_name = self.customerName.get()
         total = int(self.TotalLabel.cget("text"))
         received = int(self.ReceivedEntry.get())
         balance = total - received
         root = tk.Tk()
-        customer.Toplevel1(root, Phone=customer_phone_num, Name=customer_name, cursor=cursor, balance=balance)
+        customer.Toplevel1(root, Phone=customer_phone_num, Name=customer_name, cursor=cursor, balance=balance,makeBill_class=class_)
         root.mainloop()
+        return True
 
-    def commitDB(self):
+    def commitDB(self,customer_added=False):
         date = datetime.datetime.now()
         date = date.strftime("%Y-%m-%d")
         # date=str(date.strftime("%Y-%m-%d %H:%M"))
@@ -240,14 +242,15 @@ class MakeBillPage:
                     return
 
             if not found:
-                self.addcustomer(self.c)
+                self.addcustomer(self.c,class_=self)
                 # print("not found")
                 return
             self.c.execute(
                 f'INSERT INTO Bills(Bill_Id,today_date,Profit,Sale_earn,Discount,Lended_amount,customer_phone_number,customer_name)'
                 f'VALUES ({self.billNumber},"{date}",{profit},{total},{discount},{lend},"{customer_phone_number}","{customer_name}")')
             row = rows[0]
-            self.c.execute(f'UPDATE Customers SET Due_Amount = Due_Amount + {lend} WHERE C_Name = "{customer_name}"')
+            if not customer_added:
+                self.c.execute(f'UPDATE Customers SET Due_Amount = Due_Amount + {lend} WHERE C_Name = "{customer_name}"')
             self.c.execute(f'INSERT INTO Ledger (customerName,receivingDate,ReceivedAmount,Due_Amount,Note)'
                            f'VALUES ("{row[0]}","{date}",0,{row[1] + total},"Bill created of {total} rupees")')
             if receivedAmount > 0:
@@ -393,11 +396,11 @@ class MakeBillPage:
         self.Button1.configure(text='''Print_OK''')
         self.Button1.configure(command=self.commitDB)
 
-        self.AddCustomer = tk.Button(top)
-        self.AddCustomer.place(relx=0.909, rely=0.855, height=31, width=84)
-        self.AddCustomer.configure(activebackground="#f9f9f9")
-        self.AddCustomer.configure(text='''Customers''')
-        self.AddCustomer.configure(command=self.addcustomer)
+        # self.AddCustomer = tk.Button(top)
+        # self.AddCustomer.place(relx=0.909, rely=0.855, height=31, width=84)
+        # self.AddCustomer.configure(activebackground="#f9f9f9")
+        # self.AddCustomer.configure(text='''Customers''')
+        # self.AddCustomer.configure(command=self.addcustomer)
 
         self.Label1 = tk.Label(top)
         self.Label1.place(relx=0.008, rely=0.0, height=80, width=180)
@@ -448,13 +451,13 @@ class MakeBillPage:
         self.Label2.configure(text='''Item Name:''')
 
         self.DateLabel = tk.Label(top)
-        self.DateLabel.place(relx=0.867, rely=0.007, height=31, width=127)
-        self.DateLabel.configure(activebackground="#f9f9f9")
-        self.DateLabel.configure(anchor='sw')
+        self.DateLabel.place(relx=0.873, rely=0.007, height=31, width=115)
+        self.DateLabel.configure(background="white")
+        self.DateLabel.configure(anchor='w')
         self.DateLabel.configure(font=font12)
         self.DateLabel.configure(width=123)
         now = datetime.datetime.now()
-        now.strftime("%Y-%m-%d %H:%M")
+        now.strftime("%Y-%m-%d")
         self.DateLabel.configure(text=now)
 
         self.Label4 = tk.Label(top)
@@ -473,8 +476,9 @@ class MakeBillPage:
 
         self.BillNumberTAG = tk.Label(top)
         self.BillNumberTAG.place(relx=0.874, rely=0.053, height=31, width=115)
-        self.BillNumberTAG.configure(activebackground="#f9f9f9")
-        self.BillNumberTAG.configure(anchor='w')
+        # self.BillNumberTAG.configure(activebackground="#f9f9f9")
+        self.BillNumberTAG.configure(background="white")
+        # self.BillNumberTAG.configure(anchor='w')
         self.BillNumberTAG.configure(font=font12)
         self.BillNumberTAG.configure(width=115)
         self.c.execute('SELECT Max(Bill_Id) from Bills ')
@@ -574,13 +578,13 @@ class MakeBillPage:
         self.CutEntry.bind('<Return>', self.AddToSales)
 
         self.Label7 = tk.Label(top)
-        self.Label7.place(relx=0.009, rely=0.850, height=51, width=109)
+        self.Label7.place(relx=0.009, rely=0.880, height=51, width=109)
         self.Label7.configure(activebackground="#f9f9f9")
         self.Label7.configure(font=font12)
         self.Label7.configure(text='''Discount:''')
 
         self.DiscountEntry = tk.Entry(top)
-        self.DiscountEntry.place(relx=0.100, rely=0.850, height=43, relwidth=0.136)
+        self.DiscountEntry.place(relx=0.100, rely=0.88, height=43, relwidth=0.136)
         self.DiscountEntry.configure(background="white")
         self.DiscountEntry.configure(font=font13)
         self.DiscountEntry.configure(selectbackground="#c4c4c4")
@@ -597,11 +601,11 @@ class MakeBillPage:
         self.Label10_1.configure(width=69)
 
         self.isCustomerBorrowing = tk.Checkbutton(top)
-        self.isCustomerBorrowing.place(relx=0.103, rely=0.905, relheight=0.057, relwidth=0.133)
+        # self.isCustomerBorrowing.place(relx=0.103, rely=0.905, relheight=0.057, relwidth=0.133)
         self.isCustomerBorrowing.configure(activebackground="#f9f9f9")
         self.isCustomerBorrowing.configure(font=font12)
         self.isCustomerBorrowing.configure(justify='right')
-        self.isCustomerBorrowing.configure(text='''Borrowing''')
+        self.isCustomerBorrowing.configure(text='''Borrowing''', state="disable")
         self.customerBorrowed = tk.IntVar()
         self.isCustomerBorrowing.configure(width=147, variable=self.customerBorrowed)
 
@@ -611,6 +615,8 @@ class MakeBillPage:
         self.ReceivedEntry.configure(font=font13)
         self.ReceivedEntry.configure(selectbackground="#c4c4c4")
         self.ReceivedEntry.configure(width=126)
+        self.ReceivedEntry.insert(0,0)
+
 
         self.Label7_ = tk.Label(top)
         self.Label7_.place(relx=0.435, rely=0.910, height=51, width=109)
@@ -662,12 +668,13 @@ class MakeBillPage:
         # self.TotalLabel.configure(font=font10)
         # self.TotalLabel.configure(text='''0''')
 
-        self.ProductCodeEntry = tk.Entry(top)
+        self.ProductCodeEntry = tk.Label(top)
         self.ProductCodeEntry.place(relx=0.651, rely=0.106, height=43
                                     , relwidth=0.128)
         self.ProductCodeEntry.configure(background="white")
         self.ProductCodeEntry.configure(font=font13)
-        self.ProductCodeEntry.configure(width=166)
+        self.ProductCodeEntry.configure(width=166,)
+
 
         self.Label10 = tk.Label(top)
         self.Label10.place(relx=0.508, rely=0.099, height=41, width=159)

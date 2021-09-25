@@ -32,8 +32,8 @@ def destroy_window():
     top_level = None
 
 if __name__ == '__main__':
-    import AddStock
-    AddStock.vp_start_gui()
+    import Inventory
+    Inventory.vp_start_gui()
     # destroy_window()
 
 

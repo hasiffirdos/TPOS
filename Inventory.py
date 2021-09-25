@@ -34,7 +34,7 @@ def vp_start_gui():
 
     global val, w, root
     root = tk.Tk()
-    top = AddStock (root)
+    top = Inventory (root)
     # AddStock_support.init(root, top)
     root.mainloop()
 
@@ -55,14 +55,14 @@ w = None
 #     root.destroy()
 #     Main.vp_start_gui()
 
-class AddStock:
+class Inventory:
     CurrentItem = []
     name = ""
     def confirmUpdate(self,event = None):
         choice = messagebox.askyesno("confirmation", "Do you want to update this")
         curItem = self.Scrolledtreeview1.focus()
         item = self.Scrolledtreeview1.item(curItem,'values')
-
+        # filling items details to entry boxes
         if choice and curItem != '':
             self.AddNewButton.config(state = "disabled")
             self.NameEntry.delete(0,'end')
@@ -82,6 +82,8 @@ class AddStock:
         self.NameEntry.delete(0,'end')
         self.SellingPriceEntry.delete(0,'end')
         self.BuyingPriceEntry.delete(0,'end')
+
+
     def UpdatethisItem(self,event = None):
 
             global conn,c
@@ -89,15 +91,20 @@ class AddStock:
                 conn = sqlite3.connect("MyDataBase.db")
                 c = conn.cursor()
                 Name = self.NameEntry.get()
-                quantity = self.QuantityEntry.get()
-                bPrice = self.BuyingPriceEntry.get()
-                sPrice = self.SellingPriceEntry.get()
+                quantity = int(self.QuantityEntry.get())
+                bPrice = int(self.BuyingPriceEntry.get())
+                sPrice = int(self.SellingPriceEntry.get())
                 if quantity == "" or bPrice == "" or sPrice == "":
                     messagebox.showerror("Error", "Fill All the Fiels")
                     return
-
+                c.execute(f"SELECT * FROM Stocks WHERE Name = '{self.name}'")
+                rows = c.fetchall()
+                row = rows[0]
+                profit = 0
+                if row[5] < bPrice:
+                    profit = (bPrice - row[5])*row[2]
                 # c.execute(f'-- UPDATE Stocks SET Quantity = Quantity +?,buying_price = ?,sale_price =? WHERE Name like "%s"'%Name,(quantity,bPrice,sPrice))
-                c.execute(f"UPDATE Stocks SET Name = '{Name}', Quantity = Quantity + {quantity},buying_price = {bPrice},sale_price ={sPrice} WHERE Name = '{self.name}'")
+                c.execute(f"UPDATE Stocks SET Name = '{Name}', Quantity = Quantity + {quantity},buying_price = {bPrice},sale_price ={sPrice}, profit = profit + {profit} WHERE Name = '{self.name}'")
                 conn.commit()
                 messagebox.showinfo("Done", "item Added Successfully")
                 self.flush_fields()

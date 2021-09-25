@@ -57,7 +57,7 @@ class Toplevel1:
     top = None
     cursor = None
 
-    def __init__(self, top=None, Name=None, Phone=None, balance=0,cursor=None):
+    def __init__(self, top=None, Name=None, Phone=None, balance=0,cursor=None,makeBill_class=None):
         '''This class configures and populates the toplevel window.
            top is the toplevel containing window.'''
         _bgcolor = '#d9d9d9'  # X11 color: 'gray85'
@@ -65,6 +65,7 @@ class Toplevel1:
         _compcolor = '#d9d9d9' # X11 color: 'gray85'
         _ana1color = '#d9d9d9' # X11 color: 'gray85'
         _ana2color = '#ececec' # Closest X11 color: 'gray92'
+        self.mkclass=makeBill_class
         font10 = "-family {DejaVu Sans} -size 24 -weight bold -slant "  \
             "roman -underline 0 -overstrike 0"
         font9 = "-family {DejaVu Sans} -size 20 -weight normal -slant " \
@@ -220,6 +221,7 @@ class Toplevel1:
 
 
     def __del__(self):
+        #
         if self.cursor == None:
             Main.LaunchWindow()
 
@@ -240,7 +242,8 @@ class Toplevel1:
                                         parent=root)
         Note = simpledialog.askstring("Input", "Here you can type any Note or Reminder",
                                           parent=root)
-
+        if received is Note:
+            return None
         new_balance = int(old_balance) - int(received)
         print(new_balance)
         print(phone_number)
@@ -284,10 +287,14 @@ class Toplevel1:
         Phn = self.PhoneNumber.get()
         blnc = int(self.customer_balance.get())
         Addr = self.Address.get()
-        if self.parent != None:
+        print(self.parent)
+        if self.cursor != None:
             self.cursor.execute(f'INSERT INTO Customers(C_Name,Due_Amount,PhoneNumber,Address)VALUES ("{Name}",{blnc},"{Phn}","{Addr}")')
+            self.mkclass.commitDB(customer_added=True)
+
             self.top.destroy()
-            return
+            # self.top.destroy()
+            return None
 
         global conn
         try:

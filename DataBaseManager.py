@@ -46,7 +46,7 @@ def createDataBase():
                      '  FOREIGN KEY(Itemid) REFERENCES Stocks(Item_Id)'
                      # '  FOREIGN KEY(Billid) REFERENCES Bills(Bill_Id)'
                      ')')
-        conn.execute('CREATE TABLE IF NOT EXISTS Admin (UserName INTEGER ,Password text) ')
+        conn.execute('CREATE TABLE IF NOT EXISTS Admin (UserName INTEGER ,Password text, IsLogin Boolean) ')
         conn.execute('CREATE TABLE IF NOT EXISTS Customers (C_Name text ,Due_Amount INTEGER,PhoneNumber text NOT NULL UNIQUE , Address text)')
         conn.execute('CREATE TABLE IF NOT EXISTS Dealers (D_Name text ,Due_Amount INTEGER,Spend_Amount INTEGER,PhoneNumber text, Address text)')
         conn.execute('CREATE TABLE IF NOT EXISTS Ledger (customerName text, receivingDate date, ReceivedAmount INTEGER, Due_Amount INTEGER,Note text)')

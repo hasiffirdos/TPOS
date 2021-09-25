@@ -26,7 +26,7 @@ except ImportError:
 
 import Main_support
 import MakeBillPage
-import AddStock
+import Inventory
 import SaleSummary
 import BillsViewer
 import customer
@@ -76,61 +76,150 @@ class Main:
             self.timeLabel.configure(text = time2)
         self.timeLabel.after(200, self.tick)
 
-    def getpwd(self):
+    def change_password(self,login_window):
         password = ''
         root = tk.Tk()
         root.geometry("400x300")
-        namebox = tk.Entry(root)
+        # namebox = tk.Entry(root)
         pwdbox = tk.Entry(root, show='*')
 
-        newnamebox = tk.Entry(root)
+        # newnamebox = tk.Entry(root)
         newpwdbox = tk.Entry(root, show='*')
 
         # pwdbox.configure()
-        def Aclick():
+        def perform_password_change():
             password = pwdbox.get()
-            cName = namebox.get()
-            # root.destroy()
-            # print(password)
+            # cName = namebox.get()
+
             global conn
             try:
                 conn = sqlite3.connect("MyDataBase.db")
                 c = conn.cursor()
                 c.execute(
-                    'SELECT Password From Admin Where UserName = "%s"' % cName)
+                    'SELECT Password From Admin Where UserName = "admin"')
                 rows = c.fetchall()
                 find = False
                 for row in rows:
-                    if row == password:
-                        Name = newnamebox.get()
+                    if row[0] == password:
+
+                        # Name = newnamebox.get()
                         newpassword = newpwdbox.get()
-                        if newnamebox != namebox:
-                            Adminchoice = messagebox.askyesno("Add Admin", "Do Want to Add new Admin?")
-                            if Adminchoice:
-                                c.execute('INSERT INTO Admin (UserName,Password) VALUES ("%s","%s")' % (
-                                newnamebox, newpwdbox))
-                                break
-                        else:
-                            c.execute('UPDATE Admin SET Password = "%s" WHERE UserName = "%s"' % (Name, newpassword))
+
+                        c.execute('UPDATE Admin SET Password = "%s" WHERE UserName = "admin"' % (newpassword))
+                        conn.commit()
                         find = True
+                        messagebox.showinfo("Done", "Password Changed...!")
+                        login_window.lift()
+                        root.destroy()
+
                 if not find:
-                    messagebox.showerror("Error", "Wrong UserName or Password")
+                    messagebox.showerror("Error", "Wrong Password")
 
             except Error as e:
                 print(e)
 
-        tk.Label(root, text='Enter current User Name', font=("Times New Roman", 15, "normal")).pack(side='top')
-        namebox.pack(side='top')
+        # tk.Label(root, text='Enter current User Name', font=("Times New Roman", 15, "normal")).pack(side='top')
+        # namebox.pack(side='top')
         tk.Label(root, text='Enter current Password', font=("Times New Roman", 15, "normal")).pack(side='top')
         pwdbox.pack(side='top')
-        tk.Label(root, text='Enter new User Name', font=("Times New Roman", 15, "normal")).pack(side='top')
-        newnamebox.pack(side='top')
+        # tk.Label(root, text='Enter new User Name', font=("Times New Roman", 15, "normal")).pack(side='top')
+        # newnamebox.pack(side='top')
         tk.Label(root, text='Enter new Password', font=("Times New Roman", 15, "normal")).pack(side='top')
         newpwdbox.pack(side='top')
-        newpwdbox.bind('<Return>', Aclick)
+        newpwdbox.bind('<Return>', perform_password_change)
 
-        tk.Button(root, command=(Aclick), text='OK',width = 11).pack(side='top')
+        tk.Button(root, command=(perform_password_change), text='OK',width = 11).pack(side='top')
         root.mainloop()
+
+    def do_logout(self):
+        if self.login_logout_button.cget('text') == 'Logout':
+            global conn
+            try:
+                conn = sqlite3.connect("MyDataBase.db")
+                c = conn.cursor()
+                c.execute('UPDATE Admin SET IsLogin = false WHERE UserName = "admin"')
+                self.login_logout_button.configure(command=self.do_login)
+                self.LedgerButton.configure(state="disable")
+                self.login_logout_button.configure(text='''Login''')
+                conn.commit()
+            except Error as e:
+                print(e)
+
+    def check_creds(self,this):
+        name = self.username_entry.get()
+        password = self.password_entry.get()
+
+        global conn
+        try:
+            conn = sqlite3.connect("MyDataBase.db")
+            c = conn.cursor()
+            if self.login_logout_button.cget('text') == 'Login':
+
+                c.execute(f'Select UserName,Password,IsLogin from Admin ')
+                rows = c.fetchall()
+                for row in rows:
+                    if name == row[0] and password == row[1]:
+                        c.execute('UPDATE Admin SET IsLogin = true WHERE UserName = "admin"')
+                        self.LedgerButton.configure(state="normal")
+                        self.login_logout_button.configure(text='''Logout''')
+                        self.login_logout_button.configure(command=self.do_logout)
+                        this.destroy()
+                    else:
+                        messagebox.showerror("Error", "Wrong UserName or Password")
+                conn.commit()
+        except Error as e:
+            print(e)
+    def do_login(self,loging_in=True):
+        password = ''
+        root = tk.Tk()
+        root.geometry("500x350")
+
+        # name_box = tk.Entry(root, width=250)
+        # name_box.configure(width = 350)
+        self.username_label = tk.Label(root)
+        self.username_label.place(relx=0.06, rely=0.08, height=20, width=100)
+        self.username_label.configure(font=("Times New Roman",16,'bold'))
+        self.username_label.configure(text='''UserName''')
+        # self.username_label.configure(width=593)
+        self.username_entry = tk.Entry(root)
+        self.username_entry.place(relx=0.05, rely=0.13, height=43, relwidth=0.9)
+        self.username_entry.configure(background="white")
+        self.username_entry.configure(font=("Times New Roman", 16, 'bold'))
+        self.username_entry.configure(selectbackground="#c4c4c4")
+
+        self.password_label = tk.Label(root)
+        self.password_label.place(relx=0.06, rely=0.28, height=20, width=100)
+        self.password_label.configure(font=("Times New Roman",16,'bold'))
+        self.password_label.configure(text='''Password''')
+        # self.password_label.configure(width=593)
+
+        self.password_entry = tk.Entry(root,show='*')
+        self.password_entry.place(relx=0.05, rely=0.33, height=43, relwidth=0.9)
+        self.password_entry.configure(background="white")
+        self.password_entry.configure(font=("Times New Roman", 16, 'bold'))
+        self.password_entry.configure(selectbackground="#c4c4c4")
+
+
+        self.Login_button = tk.Button(root)
+        self.Login_button.place(relx=0.07, rely=0.5, height=45, width=140)
+        self.Login_button.configure(font=("Times New Roman", 13, 'bold'))
+        self.Login_button.configure(text='''Login''')
+        self.Login_button.configure(width=251)
+        self.Login_button.configure(command=lambda : self.check_creds(root))
+
+        self.change_password_button = tk.Button(root)
+        self.change_password_button.place(relx=0.35, rely=0.5, height=45, width=200)
+        self.change_password_button.configure(font=("Times New Roman", 13, 'bold'))
+        self.change_password_button.configure(text='''Change Password''')
+        self.change_password_button.configure(width=251)
+        self.change_password_button.configure(command=lambda : self.change_password(login_window=root))
+
+        # password_box = tk.Entry(root, show='*').pack(side='top')
+
+        # tk.Button(root, command=(self.Aclick), text='Login', width=11).pack(side='top')
+        # tk.Button(root, command=(self.change_password), text='ChangePassword', width=11).pack(side='top')
+        root.mainloop()
+
     def less_stocks_stats(self):
         global conn, stock_limit
         try:
@@ -145,6 +234,22 @@ class Main:
         except Error as e:
             print(e)
         return False
+
+    def is_login(self):
+        global conn, stock_limit
+        try:
+            conn = sqlite3.connect("MyDataBase.db")
+            c = conn.cursor()
+            c.execute(
+                'SELECT IsLogin From Admin')
+            rows = c.fetchall()
+            for row in rows:
+                if int(row[0]):
+                    return True
+        except Error as e:
+            print(e)
+        return False
+
     def launchSaleSummary(self, top):
         top.destroy()
         SaleSummary.launchWindow()
@@ -155,7 +260,7 @@ class Main:
 
     def LaunchAddStock(self,top):
         top.destroy()
-        AddStock.launchWindow()
+        Inventory.launchWindow()
 
     def LaunchLedger(self,top):
         top.destroy()
@@ -189,10 +294,10 @@ class Main:
         _compcolor = '#d9d9d9' # X11 color: 'gray85'
         _ana1color = '#d9d9d9' # X11 color: 'gray85'
         _ana2color = '#ececec' # Closest X11 color: 'gray92'
-        font10 = "-family {DejaVu Sans} -size 30 -weight bold -slant "  \
-            "roman -underline 0 -overstrike 0"
-        font11 = "-family {DejaVu Sans} -size 20 -weight normal -slant"  \
-            " roman -underline 0 -overstrike 0"
+        font10 = "-family {DejaVu Sans} -size 30 -weight bold -slant " \
+                 "roman -underline 0 -overstrike 0"
+        font11 = "-family {DejaVu Sans} -size 20 -weight normal -slant" \
+                 " roman -underline 0 -overstrike 0"
         font12 = "-family {DejaVu Sans} -size 16 -weight normal -slant" \
                  " roman -underline 0 -overstrike 0"
 
@@ -246,7 +351,7 @@ class Main:
 
         self.AddCustomerButton = tk.Button(top)
         self.AddCustomerButton.place(relx=0.377, rely=0.377, height=61
-                , width=251)
+                                     , width=251)
         self.AddCustomerButton.configure(font=font11)
         self.AddCustomerButton.configure(text='''Customers''')
         self.AddCustomerButton.configure(width=231)
@@ -289,10 +394,17 @@ class Main:
             self.alert_image_label.configure(image=self.alert_image)
             # self.alert_image_label.configure(width=599)
 
-        # self.Button7 = tk.Button(top)
-        # self.Button7.place(relx=0.885, rely=0.91, height=31, width=121)
-        # self.Button7.configure(text='''Backup''')
-        # self.Button7.configure(command = self.createBackup)
+        self.login_logout_button = tk.Button(top)
+        self.login_logout_button.place(relx=0.045, rely=0.1, height=31, width=121)
+        self.login_logout_button.configure(font=("Calibari", 13, "bold"))
+        if self.is_login():
+            self.login_logout_button.configure(text='''Logout''')
+            self.login_logout_button.configure(command=self.do_logout)
+            # Allow here...!
+        else:
+            self.login_logout_button.configure(command=self.do_login)
+            self.LedgerButton.configure(state="disable")
+            self.login_logout_button.configure(text='''Login''')
 
 
 if __name__ == '__main__':

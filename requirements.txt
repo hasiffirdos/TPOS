@@ -1,0 +1,6 @@
+asgiref==3.4.1
+certifi==2021.5.30
+Django==3.2.6
+django-shopping-cart==0.1
+sqlparse==0.4.1
+tk==0.1.0
